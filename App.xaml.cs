@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿using DevJournal.Components.Pages;
 using DevJournal.Services;
 
@@ -21,3 +22,19 @@ namespace DevJournal
 		}
 	}
 }
+=======
+﻿namespace DevJournal;
+
+public partial class App : Application
+{
+	public App()
+	{
+		InitializeComponent();
+	}
+
+	protected override Window CreateWindow(IActivationState? activationState)
+	{
+		return new Window(new MainPage()) { Title = "DevJournal" };
+	}
+}
+>>>>>>> fde1b6e0ea6b5f8641aab2f43c7d019b8b89d3d9
