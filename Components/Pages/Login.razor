@@ -1,0 +1,43 @@
+@page "/login"
+@inject DevJournal.Services.AuthService Auth
+@inject NavigationManager Nav
+
+<h3>Unlock Journal</h3>
+<p>Your personal space for daily reflections</p>
+
+<div style="max-width:420px; border:1px solid #ddd; padding:20px; border-radius:10px;">
+    <label>Name</label>
+    <input class="form-control" placeholder="Enter your name" @bind="name" />
+
+    <br />
+
+    <label>Password</label>
+    <input class="form-control" type="password" placeholder="Enter your password" @bind="pass" />
+
+    <br />
+
+    <button class="btn btn-dark w-100" @onclick="Unlock">Unlock</button>
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div style="color:red; margin-top:10px;">@error</div>
+    }
+
+    <div style="margin-top:10px;">
+        Don't have an account? <a href="/register">Create Account</a>
+    </div>
+</div>
+
+@code {
+    string name = "", pass = "", error = "";
+
+    private async Task Unlock()
+    {
+        error = "";
+        var (ok, msg) = await Auth.UnlockAsync(name, pass);
+
+        if (!ok) { error = msg; return; }
+
+        Nav.NavigateTo("/"); // redirect to dashboard
+    }
+}

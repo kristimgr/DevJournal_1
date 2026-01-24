@@ -1,0 +1,23 @@
+/* Overall layout */
+.layout {
+    display: flex;
+    height: 100vh;
+    background-color: #FBF7F3;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(#EAD7B7, #D6B982);
+    padding: 20px 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main content */
+.content {
+    flex: 1;
+    padding: 40px;
+    background-color: #FFF9F3;
+    overflow-y: auto;
+}
