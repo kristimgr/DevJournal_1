@@ -1,0 +1,113 @@
+@page "/calendar"
+
+<div class="container-fluid mt-4">
+
+    <div class="row">
+
+        <!-- LEFT: Calendar -->
+        <div class="col-md-8">
+
+            <h2 class="fw-bold mb-3">Calendar</h2>
+
+            <!-- Month Navigation -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-outline-secondary btn-sm">&lt;</button>
+                <h5 class="mb-0 fw-semibold">January 2026</h5>
+                <button class="btn btn-outline-secondary btn-sm">&gt;</button>
+            </div>
+
+            <!-- Week Days -->
+            <div class="row row-cols-7 text-center text-muted fw-semibold mb-2">
+                <div>Sun</div><div>Mon</div><div>Tue</div>
+                <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="row row-cols-7 g-2">
+                @foreach (var day in Days)
+                {
+                    <div class="col">
+                        <div class="calendar-day
+                            @(day == SelectedDay ? "selected" : "")"
+                             @onclick="() => SelectDay(day)">
+                            @day
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Legend -->
+            <div class="mt-3 small text-muted">
+                ● Has Entry &nbsp;&nbsp; □ Today
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Preview -->
+        <div class="col-md-4">
+
+            <div class="preview-card">
+                <h6 class="fw-bold">Preview Entry</h6>
+                <p class="text-muted small mb-3">
+                    Wednesday, January 7, 2026
+                </p>
+
+                <p class="fw-semibold mb-1">Hello</p>
+                <p class="small mb-3">This is a test journal.</p>
+
+                <p class="fw-semibold small mb-1">Moods:</p>
+                <span class="badge bg-secondary me-1">Happy</span>
+                <span class="badge bg-secondary mb-3">Happy, Calm</span>
+
+                <p class="fw-semibold small mt-3 mb-1">Tags:</p>
+                <span class="badge bg-dark me-1">Work</span>
+                <span class="badge bg-dark">Personal</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    body {
+        background-color: #fffaf4;
+    }
+
+    .calendar-day {
+        height: 80px;
+        border: 1.5px solid #e0d6c9;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        color: #5d4037;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .calendar-day.selected {
+        border: 2px solid #5d4037;
+        background-color: #f3e6d8;
+        font-weight: 700;
+    }
+
+    .preview-card {
+        background-color: #f6efe7;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    List<int> Days = Enumerable.Range(1, 31).ToList();
+    int SelectedDay = 7;
+
+    void SelectDay(int day)
+    {
+        SelectedDay = day;
+    }
+}

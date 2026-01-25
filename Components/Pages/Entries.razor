@@ -1,0 +1,117 @@
+@page "/entries"
+
+<div class="container mt-4">
+
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h2 class="fw-bold">All Entries</h2>
+        <p class="text-muted">Browse and manage your journal entries</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-3 mb-4 shadow-sm">
+        <div class="row g-3">
+
+            <!-- Search -->
+            <div class="col-md-12">
+                <input class="form-control"
+                       placeholder="Search by title or content..."
+                       @bind="searchText" />
+            </div>
+
+            <!-- Date Range -->
+            <div class="col-md-4">
+                <label class="form-label">Date Range</label>
+                <select class="form-select" @bind="dateRange">
+                    <option>All Time</option>
+                    <option>Last 7 Days</option>
+                    <option>Last Month</option>
+                </select>
+            </div>
+
+            <!-- Mood -->
+            <div class="col-md-4">
+                <label class="form-label">Mood</label>
+                <select class="form-select" @bind="selectedMood">
+                    <option>All Moods</option>
+                    <option>Happy</option>
+                    <option>Sad</option>
+                    <option>Anxious</option>
+                </select>
+            </div>
+
+            <!-- Tags -->
+            <div class="col-md-4">
+                <label class="form-label">Tags</label>
+                <select class="form-select" @bind="selectedTag">
+                    <option>All Tags</option>
+                    <option>Work</option>
+                    <option>Personal</option>
+                    <option>Reflection</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Entry Card -->
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <small class="text-muted">2026-01-07</small>
+                    <span class="badge bg-success ms-2">😊 Happy</span>
+
+                    <h5 class="mt-2 mb-1">Hello</h5>
+
+                    <div class="mt-2">
+                        <span class="badge bg-secondary me-1">Work</span>
+                        <span class="badge bg-secondary me-1">Personal</span>
+                        <span class="badge bg-secondary">Reflection</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2">
+                        ✏ Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger">
+                        🗑 Delete
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+            <li class="page-item active">
+                <span class="page-link">1</span>
+            </li>
+            <li class="page-item">
+                <span class="page-link">2</span>
+            </li>
+            <li class="page-item">
+                <span class="page-link">3</span>
+            </li>
+            <li class="page-item">
+                <a class="page-link">Next</a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+
+@code {
+    string searchText = "";
+    string dateRange = "All Time";
+    string selectedMood = "All Moods";
+    string selectedTag = "All Tags";
+}
