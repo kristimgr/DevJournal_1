@@ -1,110 +1,241 @@
 @page "/calendar"
 
-<div class="container-fluid mt-4">
+<div class="app-layout">
 
-    <div class="row">
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
 
-        <!-- LEFT: Calendar -->
-        <div class="col-md-8">
+        <h2 class="title">Calendar</h2>
 
-            <h2 class="fw-bold mb-3">Calendar</h2>
-
-            <!-- Month Navigation -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button class="btn btn-outline-secondary btn-sm">&lt;</button>
-                <h5 class="mb-0 fw-semibold">January 2026</h5>
-                <button class="btn btn-outline-secondary btn-sm">&gt;</button>
-            </div>
-
-            <!-- Week Days -->
-            <div class="row row-cols-7 text-center text-muted fw-semibold mb-2">
-                <div>Sun</div><div>Mon</div><div>Tue</div>
-                <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-            </div>
-
-            <!-- Calendar Grid -->
-            <div class="row row-cols-7 g-2">
-                @foreach (var day in Days)
-                {
-                    <div class="col">
-                        <div class="calendar-day
-                            @(day == SelectedDay ? "selected" : "")"
-                             @onclick="() => SelectDay(day)">
-                            @day
-                        </div>
-                    </div>
-                }
-            </div>
-
-            <!-- Legend -->
-            <div class="mt-3 small text-muted">
-                ● Has Entry &nbsp;&nbsp; □ Today
-            </div>
-
+        <!-- Month Nav -->
+        <div class="month-nav">
+            <button>&lt;</button>
+            <h4>January 2026</h4>
+            <button>&gt;</button>
         </div>
 
-        <!-- RIGHT: Preview -->
-        <div class="col-md-4">
-
-            <div class="preview-card">
-                <h6 class="fw-bold">Preview Entry</h6>
-                <p class="text-muted small mb-3">
-                    Wednesday, January 7, 2026
-                </p>
-
-                <p class="fw-semibold mb-1">Hello</p>
-                <p class="small mb-3">This is a test journal.</p>
-
-                <p class="fw-semibold small mb-1">Moods:</p>
-                <span class="badge bg-secondary me-1">Happy</span>
-                <span class="badge bg-secondary mb-3">Happy, Calm</span>
-
-                <p class="fw-semibold small mt-3 mb-1">Tags:</p>
-                <span class="badge bg-dark me-1">Work</span>
-                <span class="badge bg-dark">Personal</span>
-            </div>
-
+        <!-- Week Names -->
+        <div class="week-names">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
         </div>
 
+        <!-- Calendar Grid -->
+        <div class="calendar-grid">
+            @foreach (var day in Days)
+            {
+                <div class="day-card @(day == SelectedDay ? "selected" : "")" @onclick="() => SelectDay(day)">
+                    <span class="day-number">@day</span>
+
+                    @if (DaysWithEntries.Contains(day))
+                    {
+                        <span class="dot"></span>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="legend">
+            <span class="dot"></span> Has Entry
+            <span class="today-box"></span> Today
+        </div>
+    </div>
+
+    <div class="calendar-layout">
+
+    <div class="calendar-left">
+        <!-- title, month nav, week names, grid -->
+    </div>
+
+    <div class="preview-panel">
+        <!-- preview entry -->
     </div>
 
 </div>
 
+    <!-- PREVIEW PANEL -->
+    <div class="preview-panel">
+        <h5>Preview Entry</h5>
+        <p class="date">Thursday, January @(SelectedDay), 2026</p>
+
+        @if (Entries.ContainsKey(SelectedDay))
+        {
+            <h6>@Entries[SelectedDay].Title</h6>
+            <p>@Entries[SelectedDay].Content</p>
+        }
+        else
+        {
+            <p class="no-entry">No journal entry for this date.</p>
+            <button class="create-btn">Create Entry</button>
+        }
+    </div>
+
+</div>
+
+
 <style>
     body {
-        background-color: #fffaf4;
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: #fbf6ef;
     }
 
-    .calendar-day {
-        height: 80px;
-        border: 1.5px solid #e0d6c9;
-        border-radius: 8px;
+    /* Layout */
+    .app-layout {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 220px;
+        background: linear-gradient(#e8d8b8, #d9c39b);
+        padding: 20px;
+        height: 100vh;
+    }
+
+    .sidebar a {
+        display: block;
+        padding: 10px 0;
         color: #5d4037;
-        cursor: pointer;
+        text-decoration: none;
         font-weight: 500;
     }
 
-    .calendar-day.selected {
-        border: 2px solid #5d4037;
-        background-color: #f3e6d8;
-        font-weight: 700;
+    .sidebar a.active {
+        font-weight: bold;
     }
 
-    .preview-card {
-        background-color: #f6efe7;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    /* Main */
+    .main-content {
+        flex: 1;
+        padding: 40px;
+    }
+
+    /* Title */
+    .title {
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    /* Month Nav */
+    .month-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .month-nav button {
+        background: #fff;
+        border: 1px solid #cbb9a0;
+        padding: 6px 10px;
+        border-radius: 6px;
+    }
+
+    /* Week names */
+    .week-names {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        color: #7a6a58;
+        margin-bottom: 10px;
+    }
+
+    /* Calendar grid */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 14px;
+    }
+
+    /* Day card */
+    .day-card {
+        aspect-ratio: 1 / 1;
+        background: #fbf6ef;
+        border-radius: 10px;
+        border: 1px solid #e6dccc;
+        padding: 8px;
+        position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .day-card.selected {
+        border: 2px solid #5d4037;
+        background: #fff;
+    }
+
+    .day-number {
+        font-weight: 600;
+        color: #5d4037;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        background: #5d4037;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+    }
+
+    /* Preview */
+    .preview-panel {
+
+        .preview-panel {
+            width: 340px;
+            background: #f6efe7;
+            padding: 22px;
+            border-radius: 14px;
+
+            box-shadow:
+                0 8px 20px rgba(0, 0, 0, 0.08),
+                0 3px 8px rgba(0, 0, 0, 0.04);
+
+            align-self: flex-start;
+        }
+
+
+    }
+
+    .no-entry {
+        color: #7a6a58;
+    }
+
+    .create-btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid #cbb9a0;
+        background: #fff;
+        font-size: 14px;
+        cursor: pointer;
     }
 </style>
 
+
 @code {
     List<int> Days = Enumerable.Range(1, 31).ToList();
-    int SelectedDay = 7;
+    int SelectedDay = 8;
+
+    List<int> DaysWithEntries = new() { 7, 12, 18 };
+
+    class JournalEntry
+    {
+        public string Title { get; set; } = "";
+        public string Content { get; set; } = "";
+    }
+
+    Dictionary<int, JournalEntry> Entries = new()
+{
+{ 7, new JournalEntry { Title="Hello", Content="This is a test journal." } }
+};
 
     void SelectDay(int day)
     {
