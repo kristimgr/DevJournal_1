@@ -1,48 +1,58 @@
 ﻿@page "/"
 
-<div class="dashboard">
+<div class="container mt-4">
 
     <!-- Header -->
-    <div class="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Track your journaling journey</p>
+    <div class="mb-4">
+        <h1 class="fw-bold">Dashboard</h1>
+        <p class="text-muted">Track your journaling journey</p>
     </div>
 
     <!-- Stats cards -->
-    <div class="stats-grid">
+    <div class="row g-4">
 
-        <div class="stat-card">
-            <span class="stat-title">Current Streak</span>
-            <h2>0</h2>
-            <span class="stat-subtitle">consecutive days</span>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Current Streak</small>
+                    <h2 class="fw-bold">0</h2>
+                    <small class="text-muted">consecutive days</small>
+                </div>
+            </div>
         </div>
 
-        <div class="stat-card">
-            <span class="stat-title">Longest Streak</span>
-            <h2>0</h2>
-            <span class="stat-subtitle">days achieved</span>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Longest Streak</small>
+                    <h2 class="fw-bold">0</h2>
+                    <small class="text-muted">days achieved</small>
+                </div>
+            </div>
         </div>
 
-        <div class="stat-card">
-            <span class="stat-title">Missed Days</span>
-            <h2>0</h2>
-            <span class="stat-subtitle">days without entry</span>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Missed Days</small>
+                    <h2 class="fw-bold">0</h2>
+                    <small class="text-muted">days without entry</small>
+                </div>
+            </div>
         </div>
 
     </div>
 
     <!-- Recent entries -->
-    <div class="recent-entries">
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Recent Entries</h5>
+                <button class="btn btn-outline-primary btn-sm">View All</button>
+            </div>
 
-        <div class="recent-header">
-            <h3>Recent Entries</h3>
-            <button class="view-all-btn">View All</button>
+            <p class="text-muted mb-0">No entries yet. Start journaling!</p>
         </div>
-
-        <p class="empty-text">No entries yet. Start journaling!</p>
-
     </div>
 
 </div>
-
-

@@ -1,105 +1,117 @@
 @page "/new-entry"
 
-<div class="new-entry">
+<div class="container-fluid mt-4">
+    <div class="row">
 
-    <!-- Header -->
-    <div class="entry-header">
-        <h1>New Entry</h1>
-        <p>Capture your thoughts and feelings</p>
+        <!-- MAIN CONTENT -->
+        <div class="col-lg-9 col-md-10">
+
+            <!-- Header -->
+            <div class="mb-3">
+                <h2 class="fw-bold">New Entry</h2>
+                <p class="text-muted">Capture your thoughts and feelings</p>
+            </div>
+
+            <!-- Info -->
+            <div class="alert alert-light border">
+                <i class="bi bi-info-circle"></i>
+                Only one journal entry is allowed per day
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <!-- Date -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input class="form-control" value="Wednesday, January 07, 2026" disabled />
+                    </div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Title</label>
+                        <input class="form-control border-success" value="Hello" />
+                    </div>
+
+                    <!-- Content -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Content</label>
+                        <textarea class="form-control border-success" rows="6">This is a test journal.</textarea>
+                    </div>
+
+                    <!-- Primary Mood -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Primary Mood *</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill bg-dark px-3 py-2">😊 Happy</span>
+                            <span class="badge rounded-pill bg-light text-dark border">😔 Sad</span>
+                            <span class="badge rounded-pill bg-light text-dark border">😟 Anxious</span>
+                            <span class="badge rounded-pill bg-light text-dark border">😌 Calm</span>
+                            <span class="badge rounded-pill bg-light text-dark border">🤩 Excited</span>
+                            <span class="badge rounded-pill bg-light text-dark border">😤 Frustrated</span>
+                            <span class="badge rounded-pill bg-light text-dark border">🙏 Grateful</span>
+                            <span class="badge rounded-pill bg-light text-dark border">😐 Neutral</span>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Mood -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Secondary Moods (Optional - up to 2)
+                        </label>
+                        <div class="text-muted small mb-2">2/2 selected</div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill bg-secondary px-3 py-2">
+                                😊 Happy ✕
+                            </span>
+                            <span class="badge rounded-pill bg-secondary px-3 py-2">
+                                😟 Anxious ✕
+                            </span>
+                            <span class="badge rounded-pill bg-light text-muted border">😌 Calm</span>
+                            <span class="badge rounded-pill bg-light text-muted border">🤩 Excited</span>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tags</label>
+                        <div class="text-muted small mb-2">Select from built-in tags:</div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill bg-dark px-3 py-2">Work</span>
+                            <span class="badge rounded-pill bg-dark px-3 py-2">Personal</span>
+                            <span class="badge rounded-pill bg-dark px-3 py-2">Reflection</span>
+                            <span class="badge rounded-pill bg-light text-dark border">Achievement</span>
+                            <span class="badge rounded-pill bg-light text-dark border">Challenge</span>
+                            <span class="badge rounded-pill bg-light text-dark border">Health</span>
+                            <span class="badge rounded-pill bg-light text-dark border">Family</span>
+                            <span class="badge rounded-pill bg-light text-dark border">Hobby</span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Tags -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Add custom tags</label>
+                        <input class="form-control mb-2" placeholder="Type a tag and press Enter or click Add" />
+
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-secondary">Work ✕</span>
+                            <span class="badge bg-secondary">Personal ✕</span>
+                            <span class="badge bg-secondary">Reflection ✕</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-dark px-4">💾 Save Entry</button>
+                        <button class="btn btn-outline-secondary px-4">Cancel</button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
     </div>
-
-    <!-- Info box -->
-    <div class="info-box">
-        ⓘ Only one journal entry is allowed per day
-    </div>
-
-    <!-- Form -->
-    <div class="entry-form">
-
-        <!-- Date -->
-        <div class="form-group">
-            <label>Date</label>
-            <input type="text" value="Wednesday, January 07, 2026" disabled />
-        </div>
-
-        <!-- Title -->
-        <div class="form-group">
-            <label>Title</label>
-            <input type="text" placeholder="Enter title" />
-        </div>
-
-        <!-- Content -->
-        <div class="form-group">
-            <label>Content</label>
-            <textarea rows="6" placeholder="Write your journal here..."></textarea>
-        </div>
-
-        <!-- Primary Mood -->
-        <div class="form-group">
-            <label>Primary Mood *</label>
-            <div class="chip-group">
-                <span class="chip active">😊 Happy</span>
-                <span class="chip">😔 Sad</span>
-                <span class="chip">😟 Anxious</span>
-                <span class="chip">😌 Calm</span>
-                <span class="chip">🤩 Excited</span>
-                <span class="chip">😤 Frustrated</span>
-                <span class="chip">🙏 Grateful</span>
-                <span class="chip">😐 Neutral</span>
-            </div>
-        </div>
-
-        <!-- Secondary Mood -->
-        <div class="form-group">
-            <label>Secondary Moods (Optional - up to 2)</label>
-            <small>2/2 selected</small>
-
-            <div class="chip-group muted">
-                <span class="chip active">😊 Happy ✕</span>
-                <span class="chip active">😟 Anxious ✕</span>
-                <span class="chip">😌 Calm</span>
-                <span class="chip">🤩 Excited</span>
-                <span class="chip">😤 Frustrated</span>
-                <span class="chip">🙏 Grateful</span>
-                <span class="chip">😐 Neutral</span>
-            </div>
-        </div>
-
-        <!-- Tags -->
-        <div class="form-group">
-            <label>Tags</label>
-            <small>Select from built-in tags:</small>
-
-            <div class="chip-group">
-                <span class="chip active">Work</span>
-                <span class="chip active">Personal</span>
-                <span class="chip active">Reflection</span>
-                <span class="chip">Achievement</span>
-                <span class="chip">Challenge</span>
-                <span class="chip">Health</span>
-                <span class="chip">Family</span>
-                <span class="chip">Hobby</span>
-            </div>
-        </div>
-
-        <!-- Custom tags -->
-        <div class="form-group">
-            <label>Add custom tags</label>
-            <input type="text" placeholder="Type a tag and press Enter or click Add" />
-
-            <div class="chip-group muted">
-                <span class="chip active">Work ✕</span>
-                <span class="chip active">Personal ✕</span>
-                <span class="chip active">Reflection ✕</span>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="form-actions">
-            <button class="btn primary">💾 Save Entry</button>
-            <button class="btn secondary">Cancel</button>
-        </div>
-
-    </div>
-
 </div>
