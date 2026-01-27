@@ -1,4 +1,8 @@
 @page "/entries"
+@using DevJournal.Services
+@inject JournalEntryService JournalService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="container mt-4">
 
@@ -16,102 +20,223 @@
             <div class="col-md-12">
                 <input class="form-control"
                        placeholder="Search by title or content..."
-                       @bind="searchText" />
+                       @bind="SearchText"
+                       @bind:event="oninput" />
             </div>
 
             <!-- Date Range -->
-            <div class="col-md-4">
-                <label class="form-label">Date Range</label>
-                <select class="form-select" @bind="dateRange">
-                    <option>All Time</option>
-                    <option>Last 7 Days</option>
-                    <option>Last Month</option>
-                </select>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">From Date</label>
+                <input type="date" class="form-control" @bind="FromDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">To Date</label>
+                <input type="date" class="form-control" @bind="ToDate" />
             </div>
 
             <!-- Mood -->
-            <div class="col-md-4">
-                <label class="form-label">Mood</label>
-                <select class="form-select" @bind="selectedMood">
-                    <option>All Moods</option>
-                    <option>Happy</option>
-                    <option>Sad</option>
-                    <option>Anxious</option>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Mood</label>
+                <select class="form-select" @bind="SelectedMood">
+                    <option value="">All Moods</option>
+                    @foreach(var mood in AllMoods)
+                    {
+                        <option value="@mood">@mood</option>
+                    }
                 </select>
             </div>
 
             <!-- Tags -->
-            <div class="col-md-4">
-                <label class="form-label">Tags</label>
-                <select class="form-select" @bind="selectedTag">
-                    <option>All Tags</option>
-                    <option>Work</option>
-                    <option>Personal</option>
-                    <option>Reflection</option>
-                </select>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Tags</label>
+                <input class="form-control" placeholder="Search tag..." @bind="SearchTag" @bind:event="oninput" />
+            </div>
+            
+            <div class="col-12 text-end">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">Clear Filters</button>
+                <button class="btn btn-primary btn-sm px-4" @onclick="PerformSearch">Apply Filters</button>
             </div>
 
         </div>
     </div>
 
-    <!-- Entry Card -->
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body">
+    @if (FilteredEntries == null)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your memories...</p>
+        </div>
+    }
+    else if (!FilteredEntries.Any())
+    {
+        <div class="text-center mt-5">
+            <p class="text-muted">No entries found.</p>
+            <a href="/new-entry" class="btn btn-primary">Create New Entry</a>
+        </div>
+    }
+    else
+    {
+        @foreach (var entry in FilteredEntries)
+        {
+            <!-- Entry Card -->
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <small class="text-muted">2026-01-07</small>
-                    <span class="badge bg-success ms-2">😊 Happy</span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1;">
+                            <div class="mb-2">
+                                <small class="text-muted">@entry.Date.ToString("yyyy-MM-dd")</small>
+                                <!-- Primary Mood -->
+                                <span class="badge bg-success ms-2">@entry.PrimaryMood</span>
+                                
+                                <!-- Secondary Moods -->
+                                @if (!string.IsNullOrEmpty(entry.SecondaryMoods))
+                                {
+                                    @foreach(var sm in entry.SecondaryMoods.Split(','))
+                                    {
+                                        <span class="badge bg-secondary ms-1">@sm</span>
+                                    }
+                                }
 
-                    <h5 class="mt-2 mb-1">Hello</h5>
+                                <!-- Category -->
+                                @if (!string.IsNullOrEmpty(entry.Category))
+                                {
+                                    <span class="badge bg-info text-dark ms-2">@entry.Category</span>
+                                }
+                            </div>
 
-                    <div class="mt-2">
-                        <span class="badge bg-secondary me-1">Work</span>
-                        <span class="badge bg-secondary me-1">Personal</span>
-                        <span class="badge bg-secondary">Reflection</span>
+                            <h5 class="mt-2 mb-2 fw-bold">@entry.Title</h5>
+                            
+                            <!-- Content (HTML) -->
+                            <div class="entry-content mb-2 text-muted" style="max-height: 150px; overflow: hidden; position: relative;">
+                                @((MarkupString)(entry.Content ?? ""))
+                                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, white);"></div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(entry.Tags))
+                            {
+                                <div class="mt-2">
+                                    @foreach (var tag in entry.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <span class="badge bg-light text-dark border me-1">#@tag.Trim()</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="ms-3 d-flex flex-column gap-2">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(entry)">
+                                ✏ Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteEntry(entry)">
+                                🗑 Delete
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Actions -->
-                <div>
-                    <button class="btn btn-sm btn-outline-primary me-2">
-                        ✏ Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger">
-                        🗑 Delete
-                    </button>
                 </div>
             </div>
-
-        </div>
-    </div>
-
-    <!-- Pagination -->
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-            <li class="page-item disabled">
-                <span class="page-link">Previous</span>
-            </li>
-            <li class="page-item active">
-                <span class="page-link">1</span>
-            </li>
-            <li class="page-item">
-                <span class="page-link">2</span>
-            </li>
-            <li class="page-item">
-                <span class="page-link">3</span>
-            </li>
-            <li class="page-item">
-                <a class="page-link">Next</a>
-            </li>
-        </ul>
-    </nav>
+        }
+    }
 
 </div>
 
+
 @code {
-    string searchText = "";
-    string dateRange = "All Time";
-    string selectedMood = "All Moods";
-    string selectedTag = "All Tags";
+    private List<JournalEntry>? AllEntries;
+    private List<JournalEntry>? FilteredEntries;
+
+    // Filters
+    private string SearchText = "";
+    private DateTime? FromDate;
+    private DateTime? ToDate;
+    private string SelectedMood = "";
+    private string SearchTag = "";
+
+    // Dropdowns
+    private List<string> AllMoods = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEntries();
+    }
+    
+    private async Task LoadEntries()
+    {
+        AllEntries = await JournalService.GetAllEntriesAsync();
+        // Populate unique moods
+        AllMoods = AllEntries
+                    .Select(e => e.PrimaryMood)
+                    .Where(m => !string.IsNullOrEmpty(m))
+                    .Distinct()
+                    .ToList();
+                    
+        PerformSearch();
+    }
+
+    private void PerformSearch()
+    {
+        if (AllEntries == null) return;
+
+        var query = AllEntries.AsQueryable();
+
+        // Text
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            query = query.Where(e => (e.Title != null && e.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                                     (e.Content != null && e.Content.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // Date
+        if (FromDate.HasValue)
+        {
+            query = query.Where(e => e.Date >= FromDate.Value);
+        }
+        if (ToDate.HasValue)
+        {
+            query = query.Where(e => e.Date <= ToDate.Value);
+        }
+
+        // Mood
+        if (!string.IsNullOrEmpty(SelectedMood))
+        {
+            query = query.Where(e => e.PrimaryMood == SelectedMood);
+        }
+
+        // Tags
+        if (!string.IsNullOrWhiteSpace(SearchTag))
+        {
+            query = query.Where(e => e.Tags != null && e.Tags.Contains(SearchTag, StringComparison.OrdinalIgnoreCase));
+        }
+
+        FilteredEntries = query.OrderByDescending(e => e.Date).ToList();
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = "";
+        FromDate = null;
+        ToDate = null;
+        SelectedMood = "";
+        SearchTag = "";
+        PerformSearch();
+    }
+
+    private void EditEntry(JournalEntry entry)
+    {
+        Navigation.NavigateTo($"/edit-entry/{entry.Id}");
+    }
+
+    private async Task DeleteEntry(JournalEntry entry)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{entry.Title}'?");
+        if (confirmed)
+        {
+            await JournalService.DeleteEntryAsync(entry);
+            await LoadEntries(); // Refresh list
+        }
+    }
 }

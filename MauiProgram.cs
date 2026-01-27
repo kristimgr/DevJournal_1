@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using DevJournal.Services;
 
 namespace DevJournal;
@@ -30,6 +30,9 @@ public static class MauiProgram
 
         // ✅ Journal Entry Service
         builder.Services.AddSingleton<JournalEntryService>();
+        builder.Services.AddSingleton<AppState>();
+
+
 
         return builder.Build();
     }

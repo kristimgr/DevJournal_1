@@ -1,0 +1,291 @@
+@page "/edit-entry/{Id:int}"
+@using DevJournal
+@using DevJournal.Services
+@inject JournalEntryService JournalService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="container-fluid mt-4">
+    <div class="col-lg-9 col-md-10">
+        <h2 class="fw-bold">Edit Entry</h2>
+        <p class="text-muted">Update your memory</p>
+
+        @if (Entry == null)
+        {
+             <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Loading entry...</p>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <!-- Date -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input class="form-control" value="@Entry.Date.ToString("dddd, MMMM dd, yyyy")" disabled />
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <select class="form-select" @bind="Category">
+                            <option value="" disabled selected>Select a Category...</option>
+                            @foreach (var cat in PredefinedCategories)
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Title</label>
+                        <input class="form-control" @bind="Title" placeholder="Give your day a headline..." />
+                    </div>
+
+                    <!-- Content (QuillJS) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Content</label>
+                        <div id="quill-editor" style="height: 300px;"></div>
+                    </div>
+
+                    <!-- Primary Mood -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Primary Mood</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var mood in AllMoods)
+                            {
+                                <button type="button"
+                                        class="badge px-3 py-2 rounded-pill border-0
+                                        @(PrimaryMood == mood
+                                            ? "bg-primary text-white shadow"
+                                            : "bg-light text-dark border")"
+                                        @onclick="() => SelectPrimaryMood(mood)">
+                                    @mood
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Secondary Moods -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Secondary Moods (Max 2)</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var mood in AllMoods)
+                            {
+                                var isSelected = SecondaryMoodsList.Contains(mood);
+                                var isDisabled = !isSelected && SecondaryMoodsList.Count >= 2;
+
+                                <button type="button"
+                                        class="badge px-3 py-2 rounded-pill border-0
+                                        @(isSelected
+                                            ? "bg-info text-dark shadow-sm"
+                                            : "bg-light text-muted border")"
+                                        disabled="@isDisabled"
+                                        @onclick="() => ToggleSecondaryMood(mood)">
+                                    @mood
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tags</label>
+                        <input class="form-control"
+                               placeholder="Comma separated tags (e.g. Work, Health)"
+                               @bind="Tags" />
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                                class="btn btn-primary px-4"
+                                @onclick="SaveEntry">
+                            💾 Update Entry
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-outline-secondary px-4"
+                                @onclick="Cancel">
+                            Cancel
+                        </button>
+                    </div>
+
+                    @if (ShowSuccess)
+                    {
+                        <div class="alert alert-success mt-3">
+                            ✅ Entry updated successfully!
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Error))
+                    {
+                        <div class="alert alert-danger mt-3">
+                            @Error
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private JournalEntry? Entry;
+
+    private string Title = string.Empty;
+    private string PrimaryMood = string.Empty;
+    private string Category = string.Empty;
+    private string Tags = string.Empty;
+    private string Error = string.Empty;
+    private List<string> SecondaryMoodsList = new();
+    private bool ShowSuccess = false;
+
+    private List<string> AllMoods = new()
+    {
+        "😊 Happy", "🤩 Excited", "😌 Relaxed", "🙏 Grateful", "😎 Confident", 
+        "😐 Calm", "🤔 Thoughtful", "🧐 Curious", "🍂 Nostalgic", "😶 Bored", 
+        "😔 Sad", "😠 Angry", "😫 Stressed", "🥺 Lonely", "😟 Anxious" 
+    };
+
+    private List<string> PredefinedCategories = new()
+    {
+        "Personal", "Work", "Relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Entry = await JournalService.GetEntryByIdAsync(Id);
+        if (Entry != null)
+        {
+            Title = Entry.Title;
+            PrimaryMood = Entry.PrimaryMood;
+            Category = Entry.Category;
+            Tags = Entry.Tags ?? "";
+            
+            if (!string.IsNullOrEmpty(Entry.SecondaryMoods))
+            {
+                SecondaryMoodsList = Entry.SecondaryMoods.Split(',').ToList();
+            }
+        }
+    }
+
+
+    
+    // We need a way to init quill AFTER the HTML is rendered.
+    // If Entry starts null, the div #quill-editor doesn't exist.
+    // Once Entry is not null, the div appears. 
+    // We need to detect that state change.
+    
+    private bool _quillInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Entry != null && !_quillInitialized)
+        {
+             // Give a slight delay to ensure DOM is ready? Usually not needed if in OnAfterRender
+             // But we need to make sure the if(Entry != null) block has been rendered.
+             
+             try 
+             {
+                 var quillRef = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "quill-editor");
+                 if (quillRef != null)
+                 {
+                     await JS.InvokeVoidAsync("QuillFunctions.createQuill", quillRef);
+                     // Set content
+                     if (!string.IsNullOrEmpty(Entry.Content))
+                     {
+                         await JS.InvokeVoidAsync("QuillFunctions.setQuillContent", quillRef, Entry.Content);
+                     }
+                     _quillInitialized = true;
+                 }
+             }
+             catch
+             {
+                 // Ignore if not ready
+             }
+        }
+    }
+
+    private void SelectPrimaryMood(string mood)
+    {
+        PrimaryMood = mood;
+        if (SecondaryMoodsList.Contains(mood))
+        {
+            SecondaryMoodsList.Remove(mood);
+        }
+    }
+
+    private void ToggleSecondaryMood(string mood)
+    {
+        if (PrimaryMood == mood) return; 
+
+        if (SecondaryMoodsList.Contains(mood))
+        {
+            SecondaryMoodsList.Remove(mood);
+        }
+        else
+        {
+            if (SecondaryMoodsList.Count < 2)
+            {
+                SecondaryMoodsList.Add(mood);
+            }
+        }
+    }
+
+    private async Task SaveEntry()
+    {
+        Error = string.Empty;
+        ShowSuccess = false;
+
+        var content = await JS.InvokeAsync<string>("QuillFunctions.getQuillContent", 
+             await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "quill-editor"));
+
+        if (string.IsNullOrWhiteSpace(Title) ||
+            string.IsNullOrWhiteSpace(content) || content == "<p><br></p>" ||
+            string.IsNullOrWhiteSpace(PrimaryMood) ||
+            string.IsNullOrWhiteSpace(Category))
+        {
+            Error = "Title, Content, Primary Mood, and Category are required.";
+            return;
+        }
+
+        try
+        {
+            if (Entry != null)
+            {
+                Entry.Title = Title;
+                Entry.Content = content;
+                Entry.PrimaryMood = PrimaryMood;
+                Entry.Category = Category;
+                Entry.SecondaryMoods = string.Join(",", SecondaryMoodsList);
+                Entry.Tags = Tags;
+                Entry.UpdatedAt = DateTime.Now;
+
+                await JournalService.UpdateEntryAsync(Entry);
+                ShowSuccess = true;
+                
+                // Optional: Navigate back after delay
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/entries");
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unable to update entry: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/entries");
+    }
+}

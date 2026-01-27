@@ -1,124 +1,242 @@
 ﻿@page "/"
-@using DevJournal
 @using DevJournal.Services
 @inject JournalEntryService JournalService
+@inject NavigationManager Navigation
 
-
-<div class="container mt-4">
-
+<div class="container-fluid mt-4">
     <!-- Header -->
     <div class="mb-4">
-        <h1 class="fw-bold">Dashboard</h1>
+        <h1 class="fw-bold text-primary">Dashboard</h1>
         <p class="text-muted">Track your journaling journey</p>
     </div>
 
-    <!-- Stats cards -->
-    <div class="row g-4">
+    @if (IsLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading dashboard...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-5">
+            <!-- Current Streak -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-soft-blue">
+                    <div class="card-body p-4">
+                        <small class="text-uppercase text-muted fw-bold">Current Streak</small>
+                        <div class="d-flex align-items-baseline mt-2">
+                            <h1 class="display-3 fw-bold text-primary mb-0">@CurrentStreak</h1>
+                        </div>
+                        <p class="text-muted mb-0">consecutive days</p>
+                    </div>
+                </div>
+            </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Total Entries</small>
-                    <h2 class="fw-bold">@TotalEntries</h2>
-                    <small class="text-muted">saved so far</small>
+            <!-- Longest Streak -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-white">
+                    <div class="card-body p-4">
+                        <small class="text-uppercase text-muted fw-bold">Longest Streak</small>
+                        <div class="d-flex align-items-baseline mt-2">
+                            <h1 class="display-3 fw-bold text-dark mb-0">@LongestStreak</h1>
+                        </div>
+                        <p class="text-muted mb-0">days achieved</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missed Days -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-white">
+                    <div class="card-body p-4">
+                        <small class="text-uppercase text-muted fw-bold">Missed Days</small>
+                        <div class="d-flex align-items-baseline mt-2">
+                            <h1 class="display-3 fw-bold text-danger mb-0">@MissedDays</h1>
+                        </div>
+                        <p class="text-muted mb-0">days without entry</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Latest Entry</small>
-                    <h5 class="fw-bold">@LatestTitle</h5>
-                    <small class="text-muted">@LatestDate</small>
-                </div>
-            </div>
+        <!-- Recent Entries -->
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <h4 class="fw-bold mb-0">Recent Entries</h4>
+            <a href="/entries" class="btn btn-outline-primary btn-sm rounded-pill px-3">View All</a>
         </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Database Status</small>
-                    <h5 class="fw-bold text-success">Connected</h5>
-                    <small class="text-muted">SQLite OK</small>
-                </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                @if (RecentEntries.Any())
+                {
+                    <div class="list-group list-group-flush rounded-3">
+                        @foreach (var entry in RecentEntries)
+                        {
+                            <div class="list-group-item p-4 border-bottom-light action-row" @onclick="() => NavigateToEntry(entry)">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="fw-bold mb-1 text-primary">@entry.Title</h5>
+                                        <div class="mb-1 text-muted text-truncate" style="max-height: 24px; overflow: hidden;">
+                                            @((MarkupString)(entry.Content ?? ""))
+                                        </div>
+                                        <div class="small text-muted mt-2">
+                                            <span class="me-3">📅 @entry.Date.ToString("MMM dd, yyyy")</span>
+                                            <span class="badge bg-light text-primary border">@entry.PrimaryMood</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted">
+                                        <span class="fs-4">›</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <p class="text-muted mb-3">No entries yet. Start journaling!</p>
+                        <a href="/new-entry" class="btn btn-primary rounded-pill px-4">Create First Entry</a>
+                    </div>
+                }
             </div>
         </div>
-
-    </div>
-
-    <!-- Recent entries -->
-    <div class="card shadow-sm mt-4">
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">Recent Entries</h5>
-                <button class="btn btn-outline-primary btn-sm" @onclick="LoadEntries">
-                    🔄 Test Database
-                </button>
-            </div>
-
-            @if (Entries == null)
-            {
-                <p class="text-muted mb-0">
-                    Click <b>Test Database</b> to check if entries are saved.
-                </p>
-            }
-            else if (Entries.Count == 0)
-            {
-                <p class="text-danger mb-0">
-                    ❌ No entries found in database
-                </p>
-            }
-            else
-            {
-                <p class="text-success mb-2">
-                    ✅ Total Entries: <b>@Entries.Count</b>
-                </p>
-
-                <ul class="list-group">
-                    @foreach (var entry in Entries.Take(5))
-                    {
-                        <li class="list-group-item">
-                            <b>@entry.Date.ToShortDateString()</b> — @entry.Title
-                        </li>
-                    }
-                </ul>
-            }
-
-        </div>
-    </div>
-
+    }
 </div>
 
+<style>
+    .bg-soft-blue {
+        background-color: #e3f2fd; /* Light Blue */
+    }
+    .action-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .action-row:hover {
+        background-color: #f8fbff;
+    }
+    .border-bottom-light {
+        border-bottom: 1px solid #edf2f7;
+    }
+</style>
+
 @code {
+    private bool IsLoading = true;
+    private int CurrentStreak = 0;
+    private int LongestStreak = 0;
+    private int MissedDays = 0;
+    private List<JournalEntry> RecentEntries = new();
 
-    private List<JournalEntry>? Entries;
-    private int TotalEntries = 0;
-    private string LatestTitle = "—";
-    private string LatestDate = "—";
-
-    private async Task LoadEntries()
+    protected override async Task OnInitializedAsync()
     {
-        Entries = await JournalService.GetAllEntriesAsync();
-
-        TotalEntries = Entries.Count;
-
-        if (Entries.Count > 0)
+        var entries = await JournalService.GetAllEntriesAsync();
+        
+        if (entries.Any())
         {
-            var latest = Entries
-                .OrderByDescending(e => e.Date)
-                .First();
+            var sortedDates = entries.Select(e => e.Date.Date).Distinct().OrderBy(d => d).ToList();
+            
+            CalculateStreaks(sortedDates);
+            CalculateMissedDays(sortedDates);
+            
+            RecentEntries = entries.OrderByDescending(e => e.Date).Take(5).ToList();
+        }
 
-            LatestTitle = latest.Title;
-            LatestDate = latest.Date.ToString("dddd, MMM dd yyyy");
+        IsLoading = false;
+    }
+    
+    private void CalculateStreaks(List<DateTime> sortedDates)
+    {
+        if (!sortedDates.Any()) return;
+
+        // Current Streak
+        var today = DateTime.Today;
+        var checkDate = today;
+
+
+        // If newest entry is not today or yesterday, streak is broken/0 (unless we want to be lenient)
+        if (sortedDates.Last() == today)
+        {
+             // good
+        }
+        else if (sortedDates.Last() == today.AddDays(-1))
+        {
+             checkDate = today.AddDays(-1);
         }
         else
         {
-            LatestTitle = "No entries";
-            LatestDate = "—";
+             // Last entry older than yesterday -> Streak 0
+             // But we still need to calculate Longest Streak
         }
 
-        StateHasChanged();
+        // Logic for Longest and Current
+        int maxRun = 0;
+        int run = 0;
+        DateTime? lastDate = null;
+
+        // Iterate backwards for Current Streak? 
+        // Let's iterate forwards for Max Streak
+        foreach (var d in sortedDates)
+        {
+            if (lastDate == null) 
+            {
+                run = 1;
+            }
+            else if (d == lastDate.Value.AddDays(1))
+            {
+                run++;
+            }
+            else
+            {
+                run = 1;
+            }
+            
+            if (run > maxRun) maxRun = run;
+            lastDate = d;
+        }
+        LongestStreak = maxRun;
+
+        // Recalculate Current Streak specifically backwards from Today
+        CurrentStreak = 0;
+        var uniqueDesc = sortedDates.OrderByDescending(d => d).ToList();
+        
+        if (!uniqueDesc.Any()) return;
+        
+        var anchor = uniqueDesc.First();
+        if (anchor == today || anchor == today.AddDays(-1))
+        {
+             var pointer = anchor;
+             foreach(var d in uniqueDesc)
+             {
+                 if (d == pointer)
+                 {
+                     CurrentStreak++;
+                     pointer = pointer.AddDays(-1);
+                 }
+                 else
+                 {
+                     break;
+                 }
+             }
+        }
+    }
+
+    private void CalculateMissedDays(List<DateTime> sortedDates)
+    {
+        if (!sortedDates.Any()) return;
+        
+        var firstDate = sortedDates.First();
+        var today = DateTime.Today;
+        var totalDaysInRange = (today - firstDate).Days + 1;
+        var daysWithEntries = sortedDates.Count;
+        
+        MissedDays = totalDaysInRange - daysWithEntries;
+        if (MissedDays < 0) MissedDays = 0;
+    }
+
+    private void NavigateToEntry(JournalEntry entry)
+    {
+        Navigation.NavigateTo("/entries");
     }
 }

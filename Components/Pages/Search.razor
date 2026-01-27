@@ -1,0 +1,218 @@
+@page "/search"
+@using DevJournal.Services
+
+@inject JournalEntryService JournalService
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="mb-4">
+        <h2 class="fw-bold text-primary">🔍 Find Entries</h2>
+        <p class="text-muted">Search through your journal using filters</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm border-0 mb-4 bg-soft-blue">
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Text Search -->
+                <div class="col-md-12">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Keywords</label>
+                    <input class="form-control" placeholder="Search titles or content..." @bind="SearchText" @bind:event="oninput" />
+                </div>
+
+                <!-- Date Range -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted">From Date</label>
+                    <input type="date" class="form-control" @bind="FromDate" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted">To Date</label>
+                    <input type="date" class="form-control" @bind="ToDate" />
+                </div>
+
+                <!-- Mood -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Mood</label>
+                    <select class="form-select" @bind="SelectedMood">
+                        <option value="">All Moods</option>
+                        @foreach (var mood in AllMoods)
+                        {
+                            <option value="@mood">@mood</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Category -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Category</label>
+                    <select class="form-select" @bind="SelectedCategory">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in AllCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+                
+                <!-- Tag Filter -->
+                <div class="col-md-12">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Filter by Tag</label>
+                    <input class="form-control" placeholder="Type a tag..." @bind="SearchTag" @bind:event="oninput" />
+                </div>
+
+                <div class="col-12 text-end">
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">Clear Filters</button>
+                    <button class="btn btn-primary btn-sm px-4" @onclick="PerformSearch">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row">
+        @if (FilteredEntries == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-2">Loading...</p>
+            </div>
+        }
+        else if (!FilteredEntries.Any())
+        {
+            <div class="text-center py-5">
+                <p class="text-muted fs-5">No entries found matching your criteria.</p>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-3">Found <strong>@FilteredEntries.Count</strong> filtered results</p>
+
+            @foreach (var entry in FilteredEntries)
+            {
+                <div class="col-12 mb-3">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="fw-bold text-primary mb-1">@entry.Title</h5>
+                                    <div class="mb-2 small text-muted">
+                                        <span>📅 @entry.Date.ToLongDateString()</span>
+                                        <span class="mx-2">•</span>
+                                        <span class="badge bg-light text-dark border">@entry.PrimaryMood</span>
+                                        @if (!string.IsNullOrEmpty(entry.Category))
+                                        {
+                                            <span class="badge bg-light text-info border ms-1">@entry.Category</span>
+                                        }
+                                    </div>
+                                    
+                                    <div class="entry-preview text-muted" style="max-height: 100px; overflow: hidden; position: relative;">
+                                        @((MarkupString)(entry.Content ?? ""))
+                                        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, white);"></div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(entry)">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+<style>
+    .bg-soft-blue {
+        background-color: #f0f8ff;
+    }
+</style>
+
+@code {
+    private List<JournalEntry>? AllEntries;
+    private List<JournalEntry>? FilteredEntries;
+
+    // Filters
+    private string SearchText = "";
+    private DateTime? FromDate;
+    private DateTime? ToDate;
+    private string SelectedMood = "";
+    private string SelectedCategory = "";
+    private string SearchTag = "";
+
+    // Dropdown Data
+    private List<string> AllMoods = new();
+    private List<string> AllCategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllEntries = await JournalService.GetAllEntriesAsync();
+        FilteredEntries = AllEntries.OrderByDescending(e => e.Date).ToList();
+
+        // Populate dropdowns unique values
+        AllMoods = AllEntries.Select(e => e.PrimaryMood).Where(m => !string.IsNullOrEmpty(m)).Distinct().ToList();
+        AllCategories = AllEntries.Select(e => e.Category).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
+    }
+
+    private void PerformSearch()
+    {
+        if (AllEntries == null) return;
+
+        var query = AllEntries.AsQueryable();
+
+        // Text
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            query = query.Where(e => (e.Title != null && e.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                                     (e.Content != null && e.Content.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // Date
+        if (FromDate.HasValue)
+        {
+            query = query.Where(e => e.Date >= FromDate.Value);
+        }
+        if (ToDate.HasValue)
+        {
+            query = query.Where(e => e.Date <= ToDate.Value);
+        }
+
+        // Mood
+        if (!string.IsNullOrEmpty(SelectedMood))
+        {
+            query = query.Where(e => e.PrimaryMood == SelectedMood);
+        }
+
+        // Category
+        if (!string.IsNullOrEmpty(SelectedCategory))
+        {
+            query = query.Where(e => e.Category == SelectedCategory);
+        }
+
+        // Tags
+        if (!string.IsNullOrWhiteSpace(SearchTag))
+        {
+            query = query.Where(e => e.Tags != null && e.Tags.Contains(SearchTag, StringComparison.OrdinalIgnoreCase));
+        }
+
+        FilteredEntries = query.OrderByDescending(e => e.Date).ToList();
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = "";
+        FromDate = null;
+        ToDate = null;
+        SelectedMood = "";
+        SelectedCategory = "";
+        SearchTag = "";
+        FilteredEntries = AllEntries?.OrderByDescending(e => e.Date).ToList();
+    }
+
+    private void EditEntry(JournalEntry entry)
+    {
+        // For now navigation to entries list, ideally strict view page
+        Navigation.NavigateTo("/entries");
+    }
+}

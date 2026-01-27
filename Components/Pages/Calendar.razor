@@ -1,244 +1,205 @@
 @page "/calendar"
+@using DevJournal.Services
+@inject JournalEntryService JournalService
+@inject NavigationManager Navigation
 
-<div class="app-layout">
+<div class="container-fluid mt-4">
+    <div class="row">
+        
+        <!-- CALENDAR SIDE -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    
+                    <!-- Header / Navigation -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="fw-bold text-primary m-0">@CurrentDate.ToString("MMMM yyyy")</h3>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm rounded-circle" @onclick="PrevMonth">❮</button>
+                            <button class="btn btn-outline-primary btn-sm rounded-circle" @onclick="NextMonth">❯</button>
+                        </div>
+                    </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
+                    <!-- Week Days -->
+                    <div class="row text-center mb-2 fw-bold text-muted small">
+                        <div class="col">Sun</div>
+                        <div class="col">Mon</div>
+                        <div class="col">Tue</div>
+                        <div class="col">Wed</div>
+                        <div class="col">Thu</div>
+                        <div class="col">Fri</div>
+                        <div class="col">Sat</div>
+                    </div>
 
-        <h2 class="title">Calendar</h2>
+                    <!-- Days Grid -->
+                    <div class="calendar-grid">
+                        @for (int i = 0; i < EmptySlots; i++)
+                        {
+                            <div class="calendar-day empty"></div>
+                        }
 
-        <!-- Month Nav -->
-        <div class="month-nav">
-            <button>&lt;</button>
-            <h4>January 2026</h4>
-            <button>&gt;</button>
+                        @for (int day = 1; day <= DaysInMonth; day++)
+                        {
+                            var date = new DateTime(CurrentDate.Year, CurrentDate.Month, day);
+                            var hasEntry = EntriesByDate.ContainsKey(date.Date);
+                            var isSelected = SelectedDate.Date == date.Date;
+
+                            <div class="calendar-day @(isSelected ? "selected" : "") @(hasEntry ? "has-entry" : "")" 
+                                 @onclick="() => SelectDate(date)">
+                                
+                                <span class="day-number">@day</span>
+                                
+                                @if (hasEntry)
+                                {
+                                    <div class="mood-dot" title="@EntriesByDate[date.Date].PrimaryMood"></div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <!-- Week Names -->
-        <div class="week-names">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-        </div>
+        <!-- PREVIEW SIDE -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 bg-soft-blue">
+                <div class="card-body">
+                    <h5 class="fw-bold text-primary">@SelectedDate.ToString("D")</h5>
+                    <hr/>
 
-        <!-- Calendar Grid -->
-        <div class="calendar-grid">
-            @foreach (var day in Days)
-            {
-                <div class="day-card @(day == SelectedDay ? "selected" : "")" @onclick="() => SelectDay(day)">
-                    <span class="day-number">@day</span>
-
-                    @if (DaysWithEntries.Contains(day))
+                    @if (EntriesByDate.ContainsKey(SelectedDate.Date))
                     {
-                        <span class="dot"></span>
+                        var entry = EntriesByDate[SelectedDate.Date];
+                        <h4 class="fw-bold">@entry.Title</h4>
+                        <div class="mb-2">
+                             <span class="badge bg-white text-primary border">@entry.PrimaryMood</span>
+                             @if(!string.IsNullOrEmpty(entry.Category)) {
+                                 <span class="badge bg-white text-info border">@entry.Category</span>
+                             }
+                        </div>
+                        <div class="text-muted mb-3" style="max-height: 100px; overflow: hidden; position: relative;">
+                            @((MarkupString)(entry.Content ?? ""))
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, #e3f2fd);"></div>
+                        </div>
+                        <button class="btn btn-sm btn-light text-primary w-100 mt-auto" 
+                                @onclick="() => NavigateToEntry(entry.Date)">
+                            View Full Entry
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <p>No entry for this day.</p>
+                            @if (SelectedDate.Date == DateTime.Today)
+                            {
+                                <a href="/new-entry" class="btn btn-primary rounded-pill px-4">✍ Write Today</a>
+                            }
+                        </div>
                     }
                 </div>
-            }
+            </div>
         </div>
 
-        <div class="legend">
-            <span class="dot"></span> Has Entry
-            <span class="today-box"></span> Today
-        </div>
     </div>
-
-    <div class="calendar-layout">
-
-    <div class="calendar-left">
-        <!-- title, month nav, week names, grid -->
-    </div>
-
-    <div class="preview-panel">
-        <!-- preview entry -->
-    </div>
-
 </div>
-
-    <!-- PREVIEW PANEL -->
-    <div class="preview-panel">
-        <h5>Preview Entry</h5>
-        <p class="date">Thursday, January @(SelectedDay), 2026</p>
-
-        @if (Entries.ContainsKey(SelectedDay))
-        {
-            <h6>@Entries[SelectedDay].Title</h6>
-            <p>@Entries[SelectedDay].Content</p>
-        }
-        else
-        {
-            <p class="no-entry">No journal entry for this date.</p>
-            <button class="create-btn">Create Entry</button>
-        }
-    </div>
-
-</div>
-
 
 <style>
-    body {
-        margin: 0;
-        font-family: 'Segoe UI', sans-serif;
-        background: #fbf6ef;
-    }
-
-    /* Layout */
-    .app-layout {
-        display: flex;
-    }
-
-    /* Sidebar */
-    .sidebar {
-        width: 220px;
-        background: linear-gradient(#e8d8b8, #d9c39b);
-        padding: 20px;
-        height: 100vh;
-    }
-
-    .sidebar a {
-        display: block;
-        padding: 10px 0;
-        color: #5d4037;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .sidebar a.active {
-        font-weight: bold;
-    }
-
-    /* Main */
-    .main-content {
-        flex: 1;
-        padding: 40px;
-    }
-
-    /* Title */
-    .title {
-        font-weight: 700;
-        margin-bottom: 20px;
-    }
-
-    /* Month Nav */
-    .month-nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .month-nav button {
-        background: #fff;
-        border: 1px solid #cbb9a0;
-        padding: 6px 10px;
-        border-radius: 6px;
-    }
-
-    /* Week names */
-    .week-names {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        color: #7a6a58;
-        margin-bottom: 10px;
-    }
-
-    /* Calendar grid */
     .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 14px;
+        display: flex;
+        flex-wrap: wrap;
     }
 
-    /* Day card */
-    .day-card {
-        aspect-ratio: 1 / 1;
-        background: #fbf6ef;
-        border-radius: 10px;
-        border: 1px solid #e6dccc;
+    .calendar-day {
+        width: 14.28%; /* 100% / 7 */
+        height: 100px;
+        border: 1px solid #f0f8ff;
         padding: 8px;
         position: relative;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        transition: all 0.2s;
+        border-radius: 8px;
+    }
+    
+    .calendar-day:hover:not(.empty) {
+        background-color: #f1f9ff;
     }
 
-    .day-card.selected {
-        border: 2px solid #5d4037;
-        background: #fff;
+    .calendar-day.selected {
+        background-color: #e3f2fd;
+        border-color: #90caf9;
+        font-weight: bold;
     }
 
-    .day-number {
-        font-weight: 600;
-        color: #5d4037;
+    .calendar-day.empty {
+        background: transparent;
+        cursor: default;
     }
 
-    .dot {
-        width: 8px;
-        height: 8px;
-        background: #5d4037;
+    .has-entry {
+        background-color: #fff;
+    }
+
+    .mood-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #4dabf7;
         border-radius: 50%;
         position: absolute;
         bottom: 10px;
-        left: 10px;
+        right: 10px;
     }
 
-    /* Preview */
-    .preview-panel {
-
-        .preview-panel {
-            width: 340px;
-            background: #f6efe7;
-            padding: 22px;
-            border-radius: 14px;
-
-            box-shadow:
-                0 8px 20px rgba(0, 0, 0, 0.08),
-                0 3px 8px rgba(0, 0, 0, 0.04);
-
-            align-self: flex-start;
-        }
-
-
-    }
-
-    .no-entry {
-        color: #7a6a58;
-    }
-
-    .create-btn {
-        padding: 8px 14px;
-        border-radius: 6px;
-        border: 1px solid #cbb9a0;
-        background: #fff;
-        font-size: 14px;
-        cursor: pointer;
+    .bg-soft-blue {
+        background-color: #e3f2fd;
     }
 </style>
 
-
 @code {
-    List<int> Days = Enumerable.Range(1, 31).ToList();
-    int SelectedDay = 8;
+    private DateTime CurrentDate = DateTime.Today;
+    private DateTime SelectedDate = DateTime.Today;
+    private int DaysInMonth = 0;
+    private int EmptySlots = 0;
+    
+    private Dictionary<DateTime, JournalEntry> EntriesByDate = new();
 
-    List<int> DaysWithEntries = new() { 7, 12, 18 };
-
-    class JournalEntry
+    protected override async Task OnInitializedAsync()
     {
-        public string Title { get; set; } = "";
-        public string Content { get; set; } = "";
+        await LoadMonthData();
     }
 
-    Dictionary<int, JournalEntry> Entries = new()
-{
-{ 7, new JournalEntry { Title="Hello", Content="This is a test journal." } }
-};
-
-    void SelectDay(int day)
+    private async Task LoadMonthData()
     {
-        SelectedDay = day;
+        DaysInMonth = DateTime.DaysInMonth(CurrentDate.Year, CurrentDate.Month);
+        var firstDayOfMonth = new DateTime(CurrentDate.Year, CurrentDate.Month, 1);
+        EmptySlots = (int)firstDayOfMonth.DayOfWeek;
+
+        var allEntries = await JournalService.GetAllEntriesAsync();
+        EntriesByDate = allEntries
+            .Where(e => e.Date.Month == CurrentDate.Month && e.Date.Year == CurrentDate.Year)
+            .ToDictionary(e => e.Date.Date, e => e);
+    }
+
+    private async Task PrevMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(-1);
+        await LoadMonthData();
+    }
+
+    private async Task NextMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(1);
+        await LoadMonthData();
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        SelectedDate = date;
+    }
+    
+    private void NavigateToEntry(DateTime date)
+    {
+        // Ideally pass ID, but for now navigate to entries list or view details
+        Navigation.NavigateTo("/entries"); 
     }
 }

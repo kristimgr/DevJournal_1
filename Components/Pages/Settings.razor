@@ -1,67 +1,162 @@
 @page "/settings"
+@using DevJournal.Services
+@inject JournalEntryService JournalService
 @inject IJSRuntime JS
+@inject AppState AppState
+@implements IDisposable
 
-<div class="container-fluid mt-4">
-    <div class="col-lg-9 col-md-10">
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4">Settings</h2>
 
-        <h2 class="fw-bold">Settings</h2>
-        <p class="text-muted">Manage your preferences</p>
+    <!-- Appearance -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title fw-bold">🎨 Appearance</h5>
+            <p class="text-muted mb-2">Choose your preferred color scheme</p>
 
-        <div class="card shadow-sm mt-3">
-            <div class="card-body">
+            <div class="form-check form-switch">
+                <input class="form-check-input"
+                       type="checkbox"
+                       role="switch"
+                       checked="@AppState.IsDark"
+                       @onchange="ToggleTheme" />
 
-                <h5 class="fw-semibold mb-3">Appearance</h5>
-                <p class="text-muted mb-2">Choose your preferred color scheme</p>
-
-                <!-- Theme Preview -->
-                <div class="row g-3">
-
-                    <!-- Light -->
-                    <div class="col-md-6">
-                        <div class="theme-preview light">
-                            ☀ Light Mode
-                        </div>
-                    </div>
-
-                    <!-- Dark -->
-                    <div class="col-md-6">
-                        <div class="theme-preview dark">
-                            🌙 Dark Mode
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Toggle -->
-                <div class="form-check form-switch mt-4">
-                    <input class="form-check-input"
-                           type="checkbox"
-                           role="switch"
-                           checked="@isDark"
-                           @onchange="ToggleTheme" />
-
-                    <label class="form-check-label">
-                        Enable Dark Mode
-                    </label>
-                </div>
-
+                <label class="form-check-label">
+                    Enable Dark Mode
+                </label>
             </div>
         </div>
+    </div>
 
+    <!-- Security (PIN) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title fw-bold">🔒 Security</h5>
+            <p class="text-muted mb-3">Protect your journal with a 4-digit PIN.</p>
+
+            @if (!AppState.IsPinSet)
+            {
+                <div class="d-flex align-items-center gap-2">
+                    <input type="password" class="form-control w-auto" placeholder="Enter 4-digit PIN" maxlength="4" @bind="NewPin" />
+                    <button class="btn btn-success" @onclick="SetPin" disabled="@(NewPin.Length != 4)">Set PIN</button>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-success fw-bold">✓ PIN Protection Enabled</span>
+                    <button class="btn btn-danger btn-sm" @onclick="RemovePin">Remove PIN</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Export -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title fw-bold">💾 Export Journal</h5>
+            <p class="text-muted">Export your journal entries to PDF.</p>
+
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" @bind="StartDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" @bind="EndDate" />
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" @onclick="ExportPdf">
+                        Export to PDF
+                    </button>
+                </div>
+            </div>
+            
+             @if (ExportMessage != "")
+            {
+                <div class="mt-2 text-info">@ExportMessage</div>
+            }
+        </div>
     </div>
 </div>
 
 @code {
-    private bool isDark = false;
+    private DateTime StartDate = DateTime.Today.AddMonths(-1);
+    private DateTime EndDate = DateTime.Today;
+    private string ExportMessage = "";
+    
+    private string NewPin = "";
 
-    private async Task ToggleTheme(ChangeEventArgs e)
+    protected override void OnInitialized()
     {
-        isDark = (bool)e.Value!;
+        AppState.OnChange += StateHasChanged;
+    }
 
-        await JS.InvokeVoidAsync(
-            "document.documentElement.setAttribute",
-            "data-theme",
-            isDark ? "dark" : "light"
-        );
+    private void ToggleTheme(ChangeEventArgs e)
+    {
+        var isDark = (bool)e.Value!;
+        var theme = isDark ? "dark" : "light";
+        
+        AppState.SetTheme(theme);
+        
+        // Also apply immediately via JS
+        JS.InvokeVoidAsync("setTheme", theme);
+    }
+    
+    private async Task SetPin()
+    {
+        if (NewPin.Length == 4 && int.TryParse(NewPin, out _))
+        {
+            await AppState.SetPinAsync(NewPin);
+            NewPin = "";
+        }
+    }
+
+    private void RemovePin()
+    {
+        AppState.RemovePin();
+    }
+
+    private async Task ExportPdf()
+    {
+        ExportMessage = "Generating PDF...";
+        var allEntries = await JournalService.GetAllEntriesAsync();
+        var filtered = allEntries.Where(e => e.Date >= StartDate && e.Date <= EndDate).OrderBy(e => e.Date).ToList();
+
+        if (filtered.Any())
+        {
+            var title = $"Journal Export ({StartDate:d} - {EndDate:d})";
+            var htmlContent = "<div class='journal-export'>";
+            htmlContent += $"<h1>{title}</h1>";
+            htmlContent += $"<p class='meta'>Generated on {DateTime.Now:F}</p><hr/>";
+    
+            foreach (var entry in filtered)
+            {
+                htmlContent += $@"
+                    <div class='entry'>
+                        <h2>{entry.Title}</h2>
+                        <p class='meta'>
+                            <strong>Date:</strong> {entry.Date:yyyy-MM-dd} | 
+                            <strong>Mood:</strong> {entry.PrimaryMood}
+                        </p>
+                        <div>{entry.Content}</div>
+                    </div>";
+            }
+    
+            htmlContent += "</div>";
+
+            await JS.InvokeVoidAsync("printPdf", title, htmlContent);
+            ExportMessage = "Export initiated. Check your print dialog.";
+        }
+        else
+        {
+            ExportMessage = "No entries found in this date range.";
+        }
+    }
+    
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

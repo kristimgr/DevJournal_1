@@ -3,7 +3,7 @@
 @using DevJournal.Services
 @inject JournalEntryService JournalService
 @inject NavigationManager Navigation
-
+@inject IJSRuntime JS
 
 <div class="container-fluid mt-4">
     <div class="col-lg-9 col-md-10">
@@ -24,31 +24,66 @@
                     <input class="form-control" value="@TodayFormatted" disabled />
                 </div>
 
+                <!-- Category -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Category</label>
+                    <select class="form-select" @bind="Category">
+                        <option value="" disabled selected>Select a Category...</option>
+                        @foreach (var cat in PredefinedCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+
                 <!-- Title -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Title</label>
-                    <input class="form-control" @bind="Title" />
+                    <input class="form-control" @bind="Title" placeholder="Give your day a headline..." />
                 </div>
 
-                <!-- Content -->
+                <!-- Content (QuillJS) -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Content</label>
-                    <textarea class="form-control" rows="6" @bind="Content"></textarea>
+                    <div id="quill-editor" style="height: 300px;"></div>
                 </div>
 
                 <!-- Primary Mood -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Primary Mood</label>
+                    <label class="form-label fw-semibold">Primary Mood (Select One)</label>
 
                     <div class="d-flex flex-wrap gap-2">
-                        @foreach (var mood in Moods)
+                        @foreach (var mood in AllMoods)
                         {
                             <button type="button"
-                                    class="badge px-3 py-2 rounded-pill
+                                    class="badge px-3 py-2 rounded-pill border-0
                                     @(PrimaryMood == mood
-                                        ? "bg-dark text-white"
+                                        ? "bg-primary text-white shadow"
                                         : "bg-light text-dark border")"
-                                    @onclick="() => SelectMood(mood)">
+                                    @onclick="() => SelectPrimaryMood(mood)">
+                                @mood
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Secondary Moods -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Secondary Moods (Max 2)</label>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var mood in AllMoods)
+                        {
+                            var isSelected = SecondaryMoodsList.Contains(mood);
+                            var isDisabled = !isSelected && SecondaryMoodsList.Count >= 2;
+
+                            <button type="button"
+                                    class="badge px-3 py-2 rounded-pill border-0
+                                    @(isSelected
+                                        ? "bg-info text-dark shadow-sm"
+                                        : "bg-light text-muted border")"
+                                    disabled="@isDisabled"
+                                    @onclick="() => ToggleSecondaryMood(mood)">
                                 @mood
                             </button>
                         }
@@ -59,14 +94,15 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Tags</label>
                     <input class="form-control"
-                           placeholder="Comma separated tags"
+                           placeholder="Comma separated tags (e.g. Work, Health)"
                            @bind="Tags" />
+                    <div class="form-text">Common tags: Work, Health, Travel, Family</div>
                 </div>
 
                 <!-- Actions -->
                 <div class="d-flex gap-2">
                     <button type="button"
-                            class="btn btn-dark px-4"
+                            class="btn btn-primary px-4"
                             @onclick="SaveEntry">
                         💾 Save Entry
                     </button>
@@ -100,10 +136,14 @@
 @code {
 
     private string Title = string.Empty;
-    private string Content = string.Empty;
     private string PrimaryMood = string.Empty;
+    private string Category = string.Empty;
     private string Tags = string.Empty;
     private string Error = string.Empty;
+
+
+
+    private List<string> SecondaryMoodsList = new();
 
     private bool ShowSuccess = false;
 
@@ -112,22 +152,51 @@
     private string TodayFormatted =>
         Today.ToString("dddd, MMMM dd, yyyy");
 
-    private List<string> Moods = new()
+    private List<string> AllMoods = new()
     {
-        "😊 Happy",
-        "😔 Sad",
-        "😟 Anxious",
-        "😌 Calm",
-        "🤩 Excited",
-        "😤 Frustrated",
-        "🙏 Grateful",
-        "😐 Neutral"
+        "😊 Happy", "🤩 Excited", "😌 Relaxed", "🙏 Grateful", "😎 Confident", 
+        "😐 Calm", "🤔 Thoughtful", "🧐 Curious", "🍂 Nostalgic", "😶 Bored", 
+        "😔 Sad", "😠 Angry", "😫 Stressed", "🥺 Lonely", "😟 Anxious" 
     };
 
-    private void SelectMood(string mood)
+    private List<string> PredefinedCategories = new()
+    {
+        "Personal", "Work", "relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("QuillFunctions.createQuill", 
+                await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "quill-editor"));
+        }
+    }
+
+    private void SelectPrimaryMood(string mood)
     {
         PrimaryMood = mood;
-        Error = string.Empty;
+        if (SecondaryMoodsList.Contains(mood))
+        {
+            SecondaryMoodsList.Remove(mood);
+        }
+    }
+
+    private void ToggleSecondaryMood(string mood)
+    {
+        if (PrimaryMood == mood) return; 
+
+        if (SecondaryMoodsList.Contains(mood))
+        {
+            SecondaryMoodsList.Remove(mood);
+        }
+        else
+        {
+            if (SecondaryMoodsList.Count < 2)
+            {
+                SecondaryMoodsList.Add(mood);
+            }
+        }
     }
 
     private async Task SaveEntry()
@@ -135,35 +204,53 @@
         Error = string.Empty;
         ShowSuccess = false;
 
+        // Get content from Quill
+        var content = await JS.InvokeAsync<string>("QuillFunctions.getQuillContent", 
+             await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "quill-editor"));
+
+        // Basic validation check (Quill often returns <p><br></p> for empty)
         if (string.IsNullOrWhiteSpace(Title) ||
-            string.IsNullOrWhiteSpace(Content) ||
-            string.IsNullOrWhiteSpace(PrimaryMood))
+            string.IsNullOrWhiteSpace(content) || content == "<p><br></p>" ||
+            string.IsNullOrWhiteSpace(PrimaryMood) ||
+            string.IsNullOrWhiteSpace(Category))
         {
-            Error = "All required fields must be filled.";
+            Error = "Title, Content, Primary Mood, and Category are required.";
             StateHasChanged();
             return;
         }
 
-        var existing = await JournalService.GetEntryByDateAsync(Today);
-        if (existing != null)
+        try
         {
-            Error = "You already have an entry for today.";
-            StateHasChanged();
-            return;
+            var existing = await JournalService.GetEntryByDateAsync(Today);
+            if (existing != null)
+            {
+                Error = "You already have an entry for today.";
+                StateHasChanged();
+                return;
+            }
+
+            var entry = new JournalEntry
+            {
+                Date = Today.Date,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Title = Title,
+                Content = content, // Saving HTML
+                PrimaryMood = PrimaryMood,
+                Category = Category,
+                SecondaryMoods = string.Join(",", SecondaryMoodsList),
+                Tags = Tags
+            };
+
+            await JournalService.AddEntryAsync(entry);
+
+            ShowSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unable to save entry: {ex.Message}";
         }
 
-        var entry = new JournalEntry
-        {
-            Date = Today.Date,
-            Title = Title,
-            Content = Content,
-            PrimaryMood = PrimaryMood,
-            Tags = Tags
-        };
-
-        await JournalService.AddEntryAsync(entry);
-
-        ShowSuccess = true;
         StateHasChanged();
     }
 

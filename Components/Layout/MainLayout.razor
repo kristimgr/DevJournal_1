@@ -1,4 +1,8 @@
-﻿@inherits LayoutComponentBase
+﻿@using DevJournal.Services 
+@inherits LayoutComponentBase
+@inject AppState AppState
+@inject IJSRuntime JS
+@implements IDisposable
 
 <div class="layout">
 
@@ -9,7 +13,102 @@
 
     <!-- Main content -->
     <main class="content">
-        @Body
-    </main>
+@if (AppState.IsLocked)
+{
+    <div class="lock-screen d-flex flex-column justify-content-center align-items-center">
+        <div class="card p-4 shadow-lg border-0" style="max-width: 320px; width: 100%;">
+            <div class="text-center mb-4">
+                <h1 class="display-1 text-primary">🔒</h1>
+                <h4 class="fw-bold mt-2">Journal Locked</h4>
+                <p class="text-muted small">Enter your PIN to continue</p>
+            </div>
+            
+            <input type="password" 
+                   class="form-control form-control-lg text-center fw-bold mb-3" 
+                   placeholder="****" 
+                   maxlength="4" 
+                   @bind="PinInput" 
+                   @bind:event="oninput" 
+                   @onkeyup="CheckPin" />
+            
+            @if (ShowError)
+            {
+                <div class="text-danger text-center small shake">Incorrect PIN</div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    @Body
+}
 
+    </main>
 </div>
+
+<style>
+    .lock-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: var(--bg-color, #f0f8ff);
+        z-index: 9999;
+    }
+    
+    .shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    
+    @@keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+</style>
+
+
+@code {
+    private string PinInput = "";
+    private bool ShowError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += StateHasChanged;
+        await AppState.InitializeAsync();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("setTheme", AppState.CurrentTheme);
+        }
+    }
+
+    private async Task CheckPin()
+    {
+        ShowError = false;
+        if (PinInput.Length == 4)
+        {
+            var isValid = await AppState.VerifyPinAsync(PinInput);
+            if (isValid)
+            {
+                AppState.Unlock();
+                PinInput = "";
+            }
+            else
+            {
+                ShowError = true;
+                PinInput = "";
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}
