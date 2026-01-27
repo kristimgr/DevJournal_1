@@ -67,8 +67,8 @@
                     <input type="date" class="form-control" @bind="EndDate" />
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-primary w-100" @onclick="ExportPdf">
-                        Export to PDF
+                    <button class="btn btn-primary w-100" @onclick="ExportPdfAsDownload">
+                        Export as PDF
                     </button>
                 </div>
             </div>
@@ -118,41 +118,56 @@
         AppState.RemovePin();
     }
 
-    private async Task ExportPdf()
+    private async Task ExportPdfAsDownload()
     {
         ExportMessage = "Generating PDF...";
-        var allEntries = await JournalService.GetAllEntriesAsync();
-        var filtered = allEntries.Where(e => e.Date >= StartDate && e.Date <= EndDate).OrderBy(e => e.Date).ToList();
+        var filtered = await GetFilteredEntries();
 
         if (filtered.Any())
         {
             var title = $"Journal Export ({StartDate:d} - {EndDate:d})";
-            var htmlContent = "<div class='journal-export'>";
-            htmlContent += $"<h1>{title}</h1>";
-            htmlContent += $"<p class='meta'>Generated on {DateTime.Now:F}</p><hr/>";
-    
-            foreach (var entry in filtered)
-            {
-                htmlContent += $@"
-                    <div class='entry'>
-                        <h2>{entry.Title}</h2>
-                        <p class='meta'>
-                            <strong>Date:</strong> {entry.Date:yyyy-MM-dd} | 
-                            <strong>Mood:</strong> {entry.PrimaryMood}
-                        </p>
-                        <div>{entry.Content}</div>
-                    </div>";
-            }
-    
-            htmlContent += "</div>";
-
-            await JS.InvokeVoidAsync("printPdf", title, htmlContent);
-            ExportMessage = "Export initiated. Check your print dialog.";
+            var html = GenerateHtmlBody(title, filtered); // Send just body, JS will wrap
+            
+            var filename = $"Journal_Export_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            await JS.InvokeVoidAsync("downloadPdf", filename, html);
+            ExportMessage = "PDF Download started.";
         }
         else
         {
             ExportMessage = "No entries found in this date range.";
         }
+    }
+
+    private async Task<List<JournalEntry>> GetFilteredEntries()
+    {
+        var allEntries = await JournalService.GetAllEntriesAsync();
+        return allEntries.Where(e => e.Date >= StartDate && e.Date <= EndDate).OrderBy(e => e.Date).ToList();
+    }
+
+    private string GenerateHtml(string title, List<JournalEntry> entries)
+    {
+        return $"<div class='journal-export'>{GenerateHtmlBody(title, entries)}</div>";
+    }
+
+    private string GenerateHtmlBody(string title, List<JournalEntry> entries)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<h1>{title}</h1>");
+        sb.Append($"<p class='meta'>Generated on {DateTime.Now:F}</p><hr/>");
+
+        foreach (var entry in entries)
+        {
+             sb.Append($@"
+                <div class='entry'>
+                    <h2>{entry.Title}</h2>
+                    <p class='meta'>
+                        <strong>Date:</strong> {entry.Date:yyyy-MM-dd} | 
+                        <strong>Mood:</strong> {entry.PrimaryMood}
+                    </p>
+                    <div>{entry.Content}</div>
+                </div>");
+        }
+        return sb.ToString();
     }
     
     public void Dispose()

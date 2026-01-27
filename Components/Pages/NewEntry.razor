@@ -12,7 +12,7 @@
         <p class="text-muted">Capture your thoughts and feelings</p>
 
         <div class="alert alert-light border">
-            Only one journal entry is allowed per day
+            ⚠️ Only one journal entry is allowed per day
         </div>
 
         <div class="card shadow-sm">
@@ -93,10 +93,49 @@
                 <!-- Tags -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Tags</label>
-                    <input class="form-control"
-                           placeholder="Comma separated tags (e.g. Work, Health)"
-                           @bind="Tags" />
-                    <div class="form-text">Common tags: Work, Health, Travel, Family</div>
+                    
+                    <!-- Built-in Tags -->
+                    <div class="mb-2">
+                        <small class="text-muted d-block mb-1">Select from built-in tags:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in PredefinedTags)
+                            {
+                                var isSelected = SelectedTagsList.Contains(tag);
+                                <button type="button" 
+                                        class="badge px-3 py-2 rounded-pill border-0 @(isSelected ? "bg-secondary text-white shadow-sm" : "bg-light text-dark border")"
+                                        @onclick="() => ToggleTag(tag)">
+                                    @tag
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Custom Tags Input -->
+                    <div class="mb-2">
+                        <small class="text-muted d-block mb-1">Add custom tags:</small>
+                        <div class="input-group">
+                            <input class="form-control" 
+                                   placeholder="Type a tag and press Enter or click Add" 
+                                   @bind="CustomTagInput" 
+                                   @bind:event="oninput"
+                                   @onkeypress="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") AddCustomTag(); })" />
+                            <button class="btn btn-outline-secondary" type="button" @onclick="AddCustomTag">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Tags Display -->
+                    @if (SelectedTagsList.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @foreach (var tag in SelectedTagsList)
+                            {
+                                <span class="badge bg-secondary text-white px-2 py-1 rounded d-flex align-items-center gap-1">
+                                    @tag
+                                    <span role="button" aria-label="Remove" @onclick="() => RemoveTag(tag)" style="cursor: pointer;">&times;</span>
+                                </span>
+                            }
+                        </div>
+                    }
                 </div>
 
                 <!-- Actions -->
@@ -138,7 +177,10 @@
     private string Title = string.Empty;
     private string PrimaryMood = string.Empty;
     private string Category = string.Empty;
-    private string Tags = string.Empty;
+    // Tags managed via list now
+    private List<string> SelectedTagsList = new();
+    private string CustomTagInput = "";
+    
     private string Error = string.Empty;
 
 
@@ -161,7 +203,13 @@
 
     private List<string> PredefinedCategories = new()
     {
-        "Personal", "Work", "relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
+        "Personal", "Work", "Relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
+    };
+    
+    // Built-in tags from user screenshot
+    private List<string> PredefinedTags = new()
+    {
+        "Work", "Personal", "Reflection", "Achievement", "Challenge", "Health", "Family", "Hobby"
     };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -197,6 +245,34 @@
                 SecondaryMoodsList.Add(mood);
             }
         }
+    }
+    
+    private void ToggleTag(string tag)
+    {
+        if (SelectedTagsList.Contains(tag))
+            SelectedTagsList.Remove(tag);
+        else
+            SelectedTagsList.Add(tag);
+    }
+
+    private void AddCustomTag()
+    {
+        if (!string.IsNullOrWhiteSpace(CustomTagInput))
+        {
+            var tag = CustomTagInput.Trim();
+            // Capitalize first letter strictly? Or just add. Let's add as is but avoid duplicates.
+            // Check case-insensitive?
+            if (!SelectedTagsList.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)))
+            {
+                SelectedTagsList.Add(tag);
+            }
+            CustomTagInput = "";
+        }
+    }
+    
+    private void RemoveTag(string tag)
+    {
+        SelectedTagsList.Remove(tag);
     }
 
     private async Task SaveEntry()
@@ -239,7 +315,7 @@
                 PrimaryMood = PrimaryMood,
                 Category = Category,
                 SecondaryMoods = string.Join(",", SecondaryMoodsList),
-                Tags = Tags
+                Tags = string.Join(",", SelectedTagsList)
             };
 
             await JournalService.AddEntryAsync(entry);

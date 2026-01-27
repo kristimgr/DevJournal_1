@@ -2,22 +2,25 @@
 .layout {
     display: flex;
     height: 100vh;
-    background-color: #FBF7F3;
+    background-color: var(--layout-bg);
+    transition: background-color 0.3s ease;
 }
 
 /* Sidebar */
 .sidebar {
     width: 260px;
-    background: linear-gradient(#EAD7B7, #D6B982);
+    background: var(--sidebar-bg);
     padding: 20px 14px;
     display: flex;
     flex-direction: column;
+    transition: background 0.3s ease;
 }
 
 /* Main content */
 .content {
     flex: 1;
     padding: 40px;
-    background-color: #FFF9F3;
+    background-color: var(--content-bg);
     overflow-y: auto;
+    transition: background-color 0.3s ease;
 }
