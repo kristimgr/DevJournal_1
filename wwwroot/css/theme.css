@@ -1,0 +1,24 @@
+/* ===== THEME VARIABLES ===== */
+:root {
+    --bg-color: #fff8ef;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --accent: #111827;
+}
+
+[data-theme="dark"] {
+    --bg-color: #111827;
+    --card-bg: #1f2937;
+    --text-color: #f9fafb;
+    --accent: #f9fafb;
+}
+
+/* Global */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.card {
+    background-color: var(--card-bg);
+}

@@ -1,4 +1,8 @@
 ﻿@page "/"
+@using DevJournal
+@using DevJournal.Services
+@inject JournalEntryService JournalService
+
 
 <div class="container mt-4">
 
@@ -14,9 +18,9 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <small class="text-muted">Current Streak</small>
-                    <h2 class="fw-bold">0</h2>
-                    <small class="text-muted">consecutive days</small>
+                    <small class="text-muted">Total Entries</small>
+                    <h2 class="fw-bold">@TotalEntries</h2>
+                    <small class="text-muted">saved so far</small>
                 </div>
             </div>
         </div>
@@ -24,9 +28,9 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <small class="text-muted">Longest Streak</small>
-                    <h2 class="fw-bold">0</h2>
-                    <small class="text-muted">days achieved</small>
+                    <small class="text-muted">Latest Entry</small>
+                    <h5 class="fw-bold">@LatestTitle</h5>
+                    <small class="text-muted">@LatestDate</small>
                 </div>
             </div>
         </div>
@@ -34,9 +38,9 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <small class="text-muted">Missed Days</small>
-                    <h2 class="fw-bold">0</h2>
-                    <small class="text-muted">days without entry</small>
+                    <small class="text-muted">Database Status</small>
+                    <h5 class="fw-bold text-success">Connected</h5>
+                    <small class="text-muted">SQLite OK</small>
                 </div>
             </div>
         </div>
@@ -46,13 +50,75 @@
     <!-- Recent entries -->
     <div class="card shadow-sm mt-4">
         <div class="card-body">
+
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="mb-0">Recent Entries</h5>
-                <button class="btn btn-outline-primary btn-sm">View All</button>
+                <button class="btn btn-outline-primary btn-sm" @onclick="LoadEntries">
+                    🔄 Test Database
+                </button>
             </div>
 
-            <p class="text-muted mb-0">No entries yet. Start journaling!</p>
+            @if (Entries == null)
+            {
+                <p class="text-muted mb-0">
+                    Click <b>Test Database</b> to check if entries are saved.
+                </p>
+            }
+            else if (Entries.Count == 0)
+            {
+                <p class="text-danger mb-0">
+                    ❌ No entries found in database
+                </p>
+            }
+            else
+            {
+                <p class="text-success mb-2">
+                    ✅ Total Entries: <b>@Entries.Count</b>
+                </p>
+
+                <ul class="list-group">
+                    @foreach (var entry in Entries.Take(5))
+                    {
+                        <li class="list-group-item">
+                            <b>@entry.Date.ToShortDateString()</b> — @entry.Title
+                        </li>
+                    }
+                </ul>
+            }
+
         </div>
     </div>
 
 </div>
+
+@code {
+
+    private List<JournalEntry>? Entries;
+    private int TotalEntries = 0;
+    private string LatestTitle = "—";
+    private string LatestDate = "—";
+
+    private async Task LoadEntries()
+    {
+        Entries = await JournalService.GetAllEntriesAsync();
+
+        TotalEntries = Entries.Count;
+
+        if (Entries.Count > 0)
+        {
+            var latest = Entries
+                .OrderByDescending(e => e.Date)
+                .First();
+
+            LatestTitle = latest.Title;
+            LatestDate = latest.Date.ToString("dddd, MMM dd yyyy");
+        }
+        else
+        {
+            LatestTitle = "No entries";
+            LatestDate = "—";
+        }
+
+        StateHasChanged();
+    }
+}

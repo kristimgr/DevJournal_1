@@ -1,6 +1,5 @@
-﻿using DevJournal.Database;
+﻿using Microsoft.Extensions.Logging;
 using DevJournal.Services;
-using Microsoft.Extensions.Logging;
 
 namespace DevJournal;
 
@@ -27,17 +26,10 @@ public static class MauiProgram
 #endif
 
         // ✅ SQLite database
-        var dbPath = Path.Combine(
-            FileSystem.AppDataDirectory,
-            "journal.db"
-        );
+        builder.Services.AddSingleton<AppDatabase>();
 
-        builder.Services.AddSingleton(
-            new JournalDatabase(dbPath)
-        );
-
-        // ✅ Auth service
-        builder.Services.AddSingleton<AuthService>();
+        // ✅ Journal Entry Service
+        builder.Services.AddSingleton<JournalEntryService>();
 
         return builder.Build();
     }
