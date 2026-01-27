@@ -8,7 +8,7 @@
 
     <!-- Page Header -->
     <div class="mb-4">
-        <h2 class="fw-bold">All Entries</h2>
+        <h2 class="fw-bold text-sky-blue">All Entries</h2>
         <p class="text-muted">Browse and manage your journal entries</p>
     </div>
 
@@ -22,6 +22,7 @@
                        placeholder="Search by title or content..."
                        @bind="SearchText"
                        @bind:event="oninput" 
+                       @bind:after="PerformSearch"
                        @onkeypress="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter") PerformSearch(); })" />
                 <span class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted" role="button" @onclick="PerformSearch" style="cursor: pointer;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -30,20 +31,22 @@
                 </span>
             </div>
 
-            <!-- Date Range -->
+            <!-- Time Range -->
             <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">From Date</label>
-                <input type="date" class="form-control" @bind="FromDate" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">To Date</label>
-                <input type="date" class="form-control" @bind="ToDate" />
+                <label class="form-label small fw-bold text-muted">Time Range</label>
+                <select class="form-select" @bind="TimeRange" @bind:after="PerformSearch">
+                    <option value="All Time">All Time</option>
+                    <option value="Today">Today</option>
+                    <option value="This Week">This Week</option>
+                    <option value="This Month">This Month</option>
+                    <option value="This Year">This Year</option>
+                </select>
             </div>
 
             <!-- Mood -->
             <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Mood</label>
-                <select class="form-select" @bind="SelectedMood">
+                <select class="form-select" @bind="SelectedMood" @bind:after="PerformSearch">
                     <option value="">All Moods</option>
                     @foreach(var mood in AllMoods)
                     {
@@ -55,12 +58,11 @@
             <!-- Tags -->
             <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Tags</label>
-                <input class="form-control" placeholder="Search tag..." @bind="SearchTag" @bind:event="oninput" />
+                <input class="form-control" placeholder="Search tag..." @bind="SearchTag" @bind:event="oninput" @bind:after="PerformSearch" />
             </div>
             
-            <div class="col-12 text-end">
-                <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">Clear Filters</button>
-                <button class="btn btn-primary btn-sm px-4" @onclick="PerformSearch">Apply Filters</button>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" @onclick="ClearFilters">Clear Filters</button>
             </div>
 
         </div>
@@ -118,7 +120,7 @@
                             <!-- Content (HTML) -->
                             <div class="entry-content mb-2 text-muted" style="max-height: 150px; overflow: hidden; position: relative;">
                                 @((MarkupString)(entry.Content ?? ""))
-                                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, white);"></div>
+                                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, var(--card-bg));"></div>
                             </div>
 
                             @if (!string.IsNullOrEmpty(entry.Tags))
@@ -157,8 +159,7 @@
 
     // Filters
     private string SearchText = "";
-    private DateTime? FromDate;
-    private DateTime? ToDate;
+    private string TimeRange = "All Time";
     private string SelectedMood = "";
     private string SearchTag = "";
 
@@ -196,14 +197,26 @@
                                      (e.Content != null && e.Content.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Date
-        if (FromDate.HasValue)
+        // Time Range
+        var today = DateTime.Today;
+        if (TimeRange == "Today")
         {
-            query = query.Where(e => e.Date >= FromDate.Value);
+            query = query.Where(e => e.Date.Date == today);
         }
-        if (ToDate.HasValue)
+        else if (TimeRange == "This Week")
         {
-            query = query.Where(e => e.Date <= ToDate.Value);
+            // Assuming Monday is start of week
+            var diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var monday = today.AddDays(-1 * diff).Date;
+            query = query.Where(e => e.Date.Date >= monday);
+        }
+        else if (TimeRange == "This Month")
+        {
+            query = query.Where(e => e.Date.Month == today.Month && e.Date.Year == today.Year);
+        }
+        else if (TimeRange == "This Year")
+        {
+            query = query.Where(e => e.Date.Year == today.Year);
         }
 
         // Mood
@@ -224,8 +237,7 @@
     private void ClearFilters()
     {
         SearchText = "";
-        FromDate = null;
-        ToDate = null;
+        TimeRange = "All Time";
         SelectedMood = "";
         SearchTag = "";
         PerformSearch();

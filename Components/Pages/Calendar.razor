@@ -62,8 +62,8 @@
         </div>
 
         <!-- PREVIEW SIDE -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100 bg-soft-blue">
+        <div class="col-md-4 right-panel">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h5 class="fw-bold text-primary">@SelectedDate.ToString("D")</h5>
                     <hr/>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="text-muted mb-3" style="max-height: 100px; overflow: hidden; position: relative;">
                             @((MarkupString)(entry.Content ?? ""))
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, #e3f2fd);"></div>
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, #f8fbff);"></div>
                         </div>
                         <button class="btn btn-sm btn-light text-primary w-100 mt-auto" 
                                 @onclick="() => NavigateToEntry(entry.Date)">
@@ -93,7 +93,7 @@
                             <p>No entry for this day.</p>
                             @if (SelectedDate.Date == DateTime.Today)
                             {
-                                <a href="/new-entry" class="btn btn-primary rounded-pill px-4">✍ Write Today</a>
+                                <a href="/new-entry" class="btn btn-write-today rounded-pill px-4">✍ Write Today</a>
                             }
                         </div>
                     }

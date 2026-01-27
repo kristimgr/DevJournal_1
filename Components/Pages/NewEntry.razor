@@ -8,7 +8,7 @@
 <div class="container-fluid mt-4">
     <div class="col-lg-9 col-md-10">
 
-        <h2 class="fw-bold">New Entry</h2>
+        <h2 class="fw-bold text-sky-blue">New Entry</h2>
         <p class="text-muted">Capture your thoughts and feelings</p>
 
         <div class="alert alert-light border">
@@ -58,8 +58,8 @@
                             <button type="button"
                                     class="badge px-3 py-2 rounded-pill border-0
                                     @(PrimaryMood == mood
-                                        ? "bg-primary text-white shadow"
-                                        : "bg-light text-dark border")"
+                                        ? "bg-sky-blue shadow"
+                                        : "tag-unselected")"
                                     @onclick="() => SelectPrimaryMood(mood)">
                                 @mood
                             </button>
@@ -80,8 +80,8 @@
                             <button type="button"
                                     class="badge px-3 py-2 rounded-pill border-0
                                     @(isSelected
-                                        ? "bg-info text-dark shadow-sm"
-                                        : "bg-light text-muted border")"
+                                        ? "bg-sky-blue shadow-sm"
+                                        : "tag-unselected")"
                                     disabled="@isDisabled"
                                     @onclick="() => ToggleSecondaryMood(mood)">
                                 @mood
@@ -102,7 +102,7 @@
                             {
                                 var isSelected = SelectedTagsList.Contains(tag);
                                 <button type="button" 
-                                        class="badge px-3 py-2 rounded-pill border-0 @(isSelected ? "bg-secondary text-white shadow-sm" : "bg-light text-dark border")"
+                                        class="badge px-3 py-2 rounded-pill border-0 @(isSelected ? "bg-sky-blue shadow-sm" : "tag-unselected")"
                                         @onclick="() => ToggleTag(tag)">
                                     @tag
                                 </button>
@@ -129,7 +129,7 @@
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @foreach (var tag in SelectedTagsList)
                             {
-                                <span class="badge bg-secondary text-white px-2 py-1 rounded d-flex align-items-center gap-1">
+                                <span class="badge bg-sky-blue text-white px-2 py-1 rounded d-flex align-items-center gap-1">
                                     @tag
                                     <span role="button" aria-label="Remove" @onclick="() => RemoveTag(tag)" style="cursor: pointer;">&times;</span>
                                 </span>
@@ -141,7 +141,7 @@
                 <!-- Actions -->
                 <div class="d-flex gap-2">
                     <button type="button"
-                            class="btn btn-primary px-4"
+                            class="btn btn-sky-blue px-4"
                             @onclick="SaveEntry">
                         💾 Save Entry
                     </button>

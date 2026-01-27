@@ -6,7 +6,7 @@
 @implements IDisposable
 
 <div class="container mt-4">
-    <h2 class="fw-bold mb-4">Settings</h2>
+    <h2 class="fw-bold mb-4 text-sky-blue">Settings</h2>
 
     <!-- Appearance -->
     <div class="card shadow-sm mb-4">
@@ -67,9 +67,26 @@
                     <input type="date" class="form-control" @bind="EndDate" />
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-primary w-100" @onclick="ExportPdfAsDownload">
+                    <button class="btn btn-sky-blue w-100" @onclick="ExportPdfAsDownload">
                         Export as PDF
                     </button>
+                    <style>
+                        .btn-sky-blue {
+                            background-color: #4dabf7; /* Sky Blue */
+                            border-color: #4dabf7;
+                            color: white;
+                            transition: all 0.2s ease;
+                        }
+                        .btn-sky-blue:hover {
+                            background-color: #3b8fc2;
+                            border-color: #3b8fc2;
+                            color: white;
+                        }
+                        .btn-sky-blue:active {
+                            background-color: #a0d1f7 !important; /* Lighter on click */
+                            border-color: #a0d1f7 !important;
+                        }
+                    </style>
                 </div>
             </div>
             
