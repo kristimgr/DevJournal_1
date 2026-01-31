@@ -11,7 +11,6 @@
             <p class="text-muted mb-0">Overview of your journaling journey</p>
         </div>
 
-        <!-- Date Range Filter -->
         <div>
             <select class="form-select bg-white border-0 shadow-sm" style="min-width: 150px;" @bind="DateFilter"
                 @bind:after="ApplyFilter">
@@ -52,7 +51,6 @@
                 </div>
             </div>
 
-            <!-- Filtered Entries Count -->
             <div class="col-md-3 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center d-flex flex-column justify-content-center">
@@ -100,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Mood Distribution Chart -->
             <div class="col-md-7">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-4">
@@ -135,7 +132,6 @@
 
         </div>
 
-        <!-- Tags & Missed Days -->
         <div class="row g-4 mb-5">
 
             <!-- Tag Breakdown -->
@@ -172,7 +168,6 @@
                 </div>
             </div>
 
-            <!-- Recent Missed Days -->
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-4">
@@ -274,12 +269,10 @@
     private List<JournalEntry> AllEntries = new();
     private List<JournalEntry> FilteredEntries = new();
 
-    // KPIs
     private int CurrentStreak = 0;
     private int LongestStreak = 0;
     private int TotalWords = 0;
 
-    // Moods
     private string TopMoodEmoji = "😐";
     private string TopMoodName = "";
 
@@ -295,18 +288,15 @@
     private Dictionary<string, int> TopTags = new();
     private List<DateTime> MissedDates = new();
 
-    // Sentiment Mapping
     private readonly string[] PositiveMoods = { "😊 Happy", "🤩 Excited", "😌 Relaxed", "🙏 Grateful", "😎 Confident" };
     private readonly string[] NeutralMoods = { "😐 Calm", "🤔 Thoughtful", "🧐 Curious", "🍂 Nostalgic", "😶 Bored" };
     private readonly string[] NegativeMoods = { "😔 Sad", "😠 Angry", "😫 Stressed", "🥺 Lonely", "😟 Anxious" };
 
     protected override async Task OnInitializedAsync()
     {
-        // Load all data once
         AllEntries = await JournalService.GetAllEntriesAsync();
         ApplyFilter();
 
-        // Calculate All-Time Streak
         CalculateLongestStreak(AllEntries);
         CalculateCurrentStreak(AllEntries);
 

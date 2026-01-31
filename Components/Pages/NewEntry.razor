@@ -18,13 +18,11 @@
         <div class="card shadow-sm">
             <div class="card-body">
 
-                <!-- Date -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Date</label>
                     <input class="form-control" value="@TodayFormatted" disabled />
                 </div>
 
-                <!-- Category -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Category</label>
                     <select class="form-select" @bind="Category">
@@ -48,7 +46,6 @@
                     <div id="quill-editor" style="height: 300px;"></div>
                 </div>
 
-                <!-- Primary Mood -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Primary Mood (Select One)</label>
 
@@ -90,11 +87,9 @@
                     </div>
                 </div>
 
-                <!-- Tags -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Tags</label>
                     
-                    <!-- Built-in Tags -->
                     <div class="mb-2">
                         <small class="text-muted d-block mb-1">Select from built-in tags:</small>
                         <div class="d-flex flex-wrap gap-2">
@@ -110,7 +105,6 @@
                         </div>
                     </div>
 
-                    <!-- Custom Tags Input -->
                     <div class="mb-2">
                         <small class="text-muted d-block mb-1">Add custom tags:</small>
                         <div class="input-group">
@@ -123,7 +117,6 @@
                         </div>
                     </div>
 
-                    <!-- Selected Tags Display -->
                     @if (SelectedTagsList.Any())
                     {
                         <div class="d-flex flex-wrap gap-2 mt-2">
@@ -138,7 +131,6 @@
                     }
                 </div>
 
-                <!-- Actions -->
                 <div class="d-flex gap-2">
                     <button type="button"
                             class="btn btn-sky-blue px-4"
@@ -206,7 +198,6 @@
         "Personal", "Work", "Relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
     };
     
-    // Built-in tags from user screenshot
     private List<string> PredefinedTags = new()
     {
         "Work", "Personal", "Reflection", "Achievement", "Challenge", "Health", "Family", "Hobby"
@@ -260,8 +251,6 @@
         if (!string.IsNullOrWhiteSpace(CustomTagInput))
         {
             var tag = CustomTagInput.Trim();
-            // Capitalize first letter strictly? Or just add. Let's add as is but avoid duplicates.
-            // Check case-insensitive?
             if (!SelectedTagsList.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)))
             {
                 SelectedTagsList.Add(tag);

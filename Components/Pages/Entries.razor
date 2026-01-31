@@ -16,7 +16,6 @@
     <div class="card p-3 mb-4 shadow-sm">
         <div class="row g-3">
 
-            <!-- Search -->
             <div class="col-md-12 position-relative">
                 <input class="form-control pe-5"
                        placeholder="Search by title or content..."
@@ -31,7 +30,6 @@
                 </span>
             </div>
 
-            <!-- Time Range -->
             <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted">Time Range</label>
                 <select class="form-select" @bind="TimeRange" @bind:after="PerformSearch">
@@ -88,7 +86,6 @@
     {
         @foreach (var entry in FilteredEntries)
         {
-            <!-- Entry Card -->
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
 
@@ -134,7 +131,6 @@
                             }
                         </div>
 
-                        <!-- Actions -->
                         <div class="ms-3 d-flex flex-column gap-2">
                             <button class="btn btn-sm btn-outline-primary" @onclick="() => EditEntry(entry)">
                                 ✏ Edit
@@ -197,7 +193,6 @@
                                      (e.Content != null && e.Content.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Time Range
         var today = DateTime.Today;
         if (TimeRange == "Today")
         {
@@ -205,7 +200,6 @@
         }
         else if (TimeRange == "This Week")
         {
-            // Assuming Monday is start of week
             var diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
             var monday = today.AddDays(-1 * diff).Date;
             query = query.Where(e => e.Date.Date >= monday);

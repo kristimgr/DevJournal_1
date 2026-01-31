@@ -203,7 +203,6 @@
         "Personal", "Work", "Relationships", "Health", "Travel", "Finance", "Education", "Spirituality"
     };
 
-    // Built-in tags from user screenshot
     private List<string> PredefinedTags = new()
     {
         "Work", "Personal", "Reflection", "Achievement", "Challenge", "Health", "Family", "Hobby"
@@ -239,9 +238,6 @@
     {
         if (Entry != null && !_quillInitialized)
         {
-             // Give a slight delay to ensure DOM is ready? Usually not needed if in OnAfterRender
-             // But we need to make sure the if(Entry != null) block has been rendered.
-             
              try 
              {
                  var quillRef = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "quill-editor");

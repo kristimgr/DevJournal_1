@@ -108,15 +108,19 @@
 
 <style>
     .bg-soft-blue {
-        background-color: #e3f2fd; /* Light Blue */
+        background-color: #e3f2fd;
+        /* Light Blue */
     }
+
     .action-row {
         cursor: pointer;
         transition: background-color 0.2s;
     }
+
     .action-row:hover {
         background-color: #f8fbff;
     }
+
     .border-bottom-light {
         border-bottom: 1px solid #edf2f7;
     }
@@ -132,20 +136,20 @@
     protected override async Task OnInitializedAsync()
     {
         var entries = await JournalService.GetAllEntriesAsync();
-        
+
         if (entries.Any())
         {
             var sortedDates = entries.Select(e => e.Date.Date).Distinct().OrderBy(d => d).ToList();
-            
+
             CalculateStreaks(sortedDates);
             CalculateMissedDays(sortedDates);
-            
+
             RecentEntries = entries.OrderByDescending(e => e.Date).Take(5).ToList();
         }
 
         IsLoading = false;
     }
-    
+
     private void CalculateStreaks(List<DateTime> sortedDates)
     {
         if (!sortedDates.Any()) return;
@@ -154,20 +158,15 @@
         var today = DateTime.Today;
         var checkDate = today;
 
-
-        // If newest entry is not today or yesterday, streak is broken/0 (unless we want to be lenient)
         if (sortedDates.Last() == today)
         {
-             // good
         }
         else if (sortedDates.Last() == today.AddDays(-1))
         {
-             checkDate = today.AddDays(-1);
+            checkDate = today.AddDays(-1);
         }
         else
         {
-             // Last entry older than yesterday -> Streak 0
-             // But we still need to calculate Longest Streak
         }
 
         // Logic for Longest and Current
@@ -175,11 +174,9 @@
         int run = 0;
         DateTime? lastDate = null;
 
-        // Iterate backwards for Current Streak? 
-        // Let's iterate forwards for Max Streak
         foreach (var d in sortedDates)
         {
-            if (lastDate == null) 
+            if (lastDate == null)
             {
                 run = 1;
             }
@@ -191,7 +188,7 @@
             {
                 run = 1;
             }
-            
+
             if (run > maxRun) maxRun = run;
             lastDate = d;
         }
@@ -200,37 +197,37 @@
         // Recalculate Current Streak specifically backwards from Today
         CurrentStreak = 0;
         var uniqueDesc = sortedDates.OrderByDescending(d => d).ToList();
-        
+
         if (!uniqueDesc.Any()) return;
-        
+
         var anchor = uniqueDesc.First();
         if (anchor == today || anchor == today.AddDays(-1))
         {
-             var pointer = anchor;
-             foreach(var d in uniqueDesc)
-             {
-                 if (d == pointer)
-                 {
-                     CurrentStreak++;
-                     pointer = pointer.AddDays(-1);
-                 }
-                 else
-                 {
-                     break;
-                 }
-             }
+            var pointer = anchor;
+            foreach (var d in uniqueDesc)
+            {
+                if (d == pointer)
+                {
+                    CurrentStreak++;
+                    pointer = pointer.AddDays(-1);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 
     private void CalculateMissedDays(List<DateTime> sortedDates)
     {
         if (!sortedDates.Any()) return;
-        
+
         var firstDate = sortedDates.First();
         var today = DateTime.Today;
         var totalDaysInRange = (today - firstDate).Days + 1;
         var daysWithEntries = sortedDates.Count;
-        
+
         MissedDays = totalDaysInRange - daysWithEntries;
         if (MissedDays < 0) MissedDays = 0;
     }
