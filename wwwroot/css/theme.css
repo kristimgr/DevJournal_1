@@ -1,4 +1,3 @@
-/* ===== THEME VARIABLES ===== */
 :root {
     /* Base Colors */
     --bg-color: #fff8ef;
@@ -8,28 +7,23 @@
     --muted-text: #6b7280;
     --border-color: #e5e7eb;
 
-    /* Layout Colors */
     --layout-bg: #FBF7F3;
     --content-bg: #FFF9F3;
     
-    /* Sidebar Colors */
     --sidebar-bg: linear-gradient(#EAD7B7, #D6B982);
     --sidebar-text: #4A3728;
     
-    /* Navigation Colors */
     --nav-link-color: #5D4037;
     --nav-link-hover: rgba(93, 64, 55, 0.1);
     --nav-active-bg: #5D4037;
     --nav-active-text: #FDF5E6;
 
-    /* Input/Form Colors */
     --input-bg: #f8fbff;
     --input-border: #bbdefb;
     --input-text: #1f2937;
 }
 
 [data-theme="dark"] {
-    /* Base Colors */
     --bg-color: #111827;
     --card-bg: #1f2937;
     --text-color: #f3f4f6;
@@ -37,27 +31,22 @@
     --muted-text: #9ca3af;
     --border-color: #374151;
 
-    /* Layout Colors */
     --layout-bg: #0f172a; /* Slightly darker than bg-color for contrast if needed, or same */
     --content-bg: #111827;
 
-    /* Sidebar Colors */
     --sidebar-bg: #1f2937; /* Solid dark color for sidebar in dark mode */
     --sidebar-text: #e5e7eb;
 
-    /* Navigation Colors */
     --nav-link-color: #d1d5db;
     --nav-link-hover: rgba(255, 255, 255, 0.1);
     --nav-active-bg: #374151;
     --nav-active-text: #f9fafb;
 
-    /* Input/Form Colors */
     --input-bg: #374151;
     --input-border: #4b5563;
     --input-text: #f3f4f6;
 }
 
-/* Global Changes applied via body */
 body {
     background-color: var(--bg-color);
     color: var(--text-color);

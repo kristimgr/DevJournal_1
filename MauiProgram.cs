@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using DevJournal.Services;
 
 namespace DevJournal;
@@ -16,7 +16,6 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
 
-        // ✅ MAUI Blazor
         builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
@@ -25,14 +24,10 @@ public static class MauiProgram
         builder.Logging.SetMinimumLevel(LogLevel.Debug);
 #endif
 
-        // ✅ SQLite database
         builder.Services.AddSingleton<AppDatabase>();
 
-        // ✅ Journal Entry Service
         builder.Services.AddSingleton<JournalEntryService>();
         builder.Services.AddSingleton<AppState>();
-
-
 
         return builder.Build();
     }
